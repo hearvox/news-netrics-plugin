@@ -145,10 +145,91 @@ function netrics_pagespeed( $array ) {
         </tr>
     </tbody>
 
-
    <?php
 }
 
+
+
+/**
+ * Outputs HTML with array averages, quartiles, and standard deviations.
+ *
+ */
+function netrics_pagespeed_thead() {
+    $thead   = '';
+    $metrics = netrics_get_pagespeed_metrics();
+
+    foreach ( $metrics as $metric ) {
+        $thead .= "<th>$metric</th>";
+    }
+
+    return $thead;
+}
+
+/**
+ * Outputs HTML with array averages, quartiles, and standard deviations.
+ *
+ */
+function netrics_pagespeed_tbody( $array ) {
+    $tbody   = '';
+    $metrics = netrics_get_pagespeed_metrics();
+    $stats   = array( 'Mean', 'Maximum', 'Minimum', 'Range'. 'Quartile 1', 'Q2/Median', 'Quartile 1', 'Interquartile Range', 'Standard Deviation' );
+
+    $tbody .= '<tr><th scope="row">Mean</th>';
+    foreach ( $metrics as $metric ) {
+        $tbody .= '<td>' . netrics_pagespeed_format( $metric, nstats_mean( $array[ $metric ] ), 1 )  . '</td>';
+    }
+    $tbody .= '</tr>';
+
+    $tbody .= '<tr><th scope="row">Maximum</th>';
+    foreach ( $metrics as $metric ) {
+        $tbody .= '<td>' . netrics_pagespeed_format( $metric, nstats_max( $array[ $metric ] ), 1 )  . '</td>';
+    }
+    $tbody .= '</tr>';
+
+    $tbody .= '<tr><th scope="row">Minimum</th>';
+    foreach ( $metrics as $metric ) {
+        $tbody .= '<td>' . netrics_pagespeed_format( $metric, nstats_min( $array[ $metric ] ), 1 )  . '</td>';
+    }
+    $tbody .= '</tr>';
+
+    $tbody .= '<tr><th scope="row">Range</th>';
+    foreach ( $metrics as $metric ) {
+        $tbody .= '<td>' . netrics_pagespeed_format( $metric, nstats_range( $array[ $metric ] ), 1 )  . '</td>';
+    }
+    $tbody .= '</tr>';
+
+    $tbody .= '<tr><th scope="row">Quartile 1</th>';
+    foreach ( $metrics as $metric ) {
+        $tbody .= '<td>' . netrics_pagespeed_format( $metric, nstats_q1( $array[ $metric ] ), 1 )  . '</td>';
+    }
+    $tbody .= '</tr>';
+
+    $tbody .= '<tr><th scope="row">Q2/Median</th>';
+    foreach ( $metrics as $metric ) {
+        $tbody .= '<td>' . netrics_pagespeed_format( $metric, nstats_q2( $array[ $metric ] ), 1 )  . '</td>';
+    }
+    $tbody .= '</tr>';
+
+    $tbody .= '<tr><th scope="row">Quartile 3</th>';
+    foreach ( $metrics as $metric ) {
+        $tbody .= '<td>' . netrics_pagespeed_format( $metric, nstats_q3( $array[ $metric ] ), 1 )  . '</td>';
+    }
+    $tbody .= '</tr>';
+
+    $tbody .= '<tr><th scope="row">Interquartile Range</th>';
+    foreach ( $metrics as $metric ) {
+        $tbody .= '<td>' . netrics_pagespeed_format( $metric, nstats_iqr( $array[ $metric ] ), 1 )  . '</td>';
+    }
+    $tbody .= '</tr>';
+
+    $tbody .= '<tr><th scope="row">Standard Deviation</th>';
+    foreach ( $metrics as $metric ) {
+        $tbody .= '<td>' . netrics_pagespeed_format( $metric, nstats_sd( $array[ $metric ] ), 1 )  . '</td>';
+    }
+    $tbody .= '</tr>';
+
+    return $tbody;
+}
 
 /**
  * Outputs HTML with array averages, quartiles, and standard deviations.
@@ -429,13 +510,14 @@ function netrics_articles_results( $post_id, $items ) {
         $html = '<ol>';
 
         foreach ( $items as $article ) {
-            $html .= "<li><a href=\"{$article['url']}\">{$article['title']}</a>";
-            if ( isset( $article['pagespeed']['error'] ) ) {
+            $psi_url = 'https://developers.google.com/speed/pagespeed/insights/?url='. urlencode( $article['url'] );
+            $html .= '<li><a href="' . esc_url( $article['url'] ) . '">' . esc_html( $article['title'] ) . '</a>';
 
+            if ( isset( $article['pagespeed']['error'] ) ) {
                 $pgspeed = $article['pagespeed'];
                 $html .=  '<br><small>';
-                if ( ! $pgspeed['error'] ) {
 
+                if ( ! $pgspeed['error'] ) {
                     foreach ($g_metrics as $key => $value) {
                         $g_metrics[$key][$item] = $pgspeed[$key];
                     }
@@ -445,7 +527,7 @@ function netrics_articles_results( $post_id, $items ) {
                     $html .=  ' | Requests: ' . number_format( $pgspeed['requests'] );
                     $html .=  ' | Size: ' . size_format( $pgspeed['size'], 1 );
                     $html .=  ' | Speed/TTI(s): ' . round( $pgspeed['speed'] / 1000, 1 ) . '/' . round( $pgspeed['tti']  / 1000, 1 );
-                    $html .=  ' | Score: ' . $pgspeed['score'] * 100;
+                    $html .=  ' | <a href="' . esc_url( $psi_url ) . '">Score</a>: ' . $pgspeed['score'] * 100;
 
                 } else {
                     $html .= 'Error: ' . $pgspeed['error'];
@@ -534,19 +616,78 @@ function netrics_articles_results_table( $post_id, $items ) {
     return $html;
 }
 
+
+/**
+ * Get
+ *
+ *
+ * @since   0.1.0
+ *
+ * @return array $pub_data Array of data for all CPT posts.
+ */
+function netrics_get_pagespeed_metrics() {
+    $metrics = array( 'dom', 'requests', 'size', 'speed', 'tti', 'score' );
+
+    return $metrics;
+}
+
+/**
+ * Get
+ *
+ *
+ * @since   0.1.0
+ *
+ * @return array $pub_data Array of data for all CPT posts.
+ */
+function netrics_get_pubs_query_data( $query = array(), $circ = 1, $rank = 1 ) {
+    if ( ! isset( $query->posts ) ) {
+        $query = newsstats_get_pub_posts( 2000 );
+    }
+
+    $pubs_data = array();
+    $pub_data  = array();
+    $metrics   = netrics_get_pagespeed_metrics();
+
+    foreach ( $query->posts as $post ) {
+        $post_id   = $post->ID;
+        $pub_data = netrics_site_pagespeed( $post_id ); // PSI averages.
+
+        if ( $circ ) {
+            $pubs_data['circ'][] = get_post_meta( $post_id, 'nn_circ', true );
+        }
+
+        if ( $rank ) {
+            $pubs_data['rank'][] = get_post_meta( $post_id, 'nn_rank', true );
+        }
+
+        foreach ($metrics as $metric ) {
+            if ( isset( $pub_data[ $metric ] ) ) {
+                $pubs_data[ $metric ][] = floatval( $pub_data[ $metric ] );
+            }
+        }
+
+        if ( isset( $pub_data['results'] ) ) {
+            $pubs_data['results'][] = $pub_data['results'];
+        }
+    }
+
+    return $pubs_data;
+}
+
+
 /*******************************
  =Filter Post Results (by form selections)
  ******************************/
 /* Add query var for form -- used in hidden input field (archive-trail.php) */
-function he_trails_add_query_vars( $vars ) {
+function netrics_add_query_vars( $vars ) {
     $vars[] = "action"; // name of the var as seen in the URL.
 
     return $vars;
 }
-add_filter('query_vars', 'he_trails_add_query_vars');
+add_filter('query_vars', 'netrics_add_query_vars');
 
 /* List post results based on user's form selections (hidden input field value: 'find'). */
-function he_trails_pre_get_post( $query ) {
+function netrics_pre_get_posts( $query ) {
     if ( isset( $query->query_vars['action'] ) && $query->query_vars['action'] == 'find' ) {
 
         if ( $query->is_main_query() && ! is_admin() && is_post_type_archive( 'publication' ) ) {
@@ -571,4 +712,4 @@ function he_trails_pre_get_post( $query ) {
         }
     }
 }
-add_action( 'pre_get_posts', 'he_trails_pre_get_post' );
+add_action( 'pre_get_posts', 'netrics_pre_get_posts' );

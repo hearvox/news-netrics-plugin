@@ -445,6 +445,19 @@ function newsstats_region_save_meta( $term_id ) {
 add_action( 'edited_region', 'newsstats_region_save_meta', 10, 2 );
 add_action( 'create_region', 'newsstats_region_save_meta', 10, 2 );
 
+/**
+ * Make custom taxonomy admin post columns sortable.
+ *
+ * @param array $columns
+ * @return array
+ */
+function netrics_add_sortable_admin_columns( $columns ) {
+    $columns['taxonomy-owner'] = 'owner';
+    $columns['taxonomy-cms']   = 'cms';
+
+    return $columns;
+}
+// add_filter( 'manage_edit-publication_sortable_columns', 'netrics_add_sortable_admin_columns' );
 
 /*******************************
  =API

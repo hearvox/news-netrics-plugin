@@ -7,6 +7,24 @@ cd news.pubmedia.us
 alias nn-file='wp eval-file /home/wp_wugkzz/news.pubmedia.us/wp-content/plugins/news-netrics/code.php'
 nn-file
 
+// Git and GitHub
+/home/wp_wugkzz/news.pubmedia.us/wp-content/plugins/news-netrics
+/home/wp_wugkzz/news.pubmedia.us/wp-content/themes/newsstats
+nn-p
+nn-t
+
+git add .
+git commit -m "[Comment]"
+git push -u origin master
+islands plotters polled
+
+https://help.dreamhost.com/hc/en-us/articles/216445317-How-do-I-set-up-a-Git-repository-
+git log --oneline
+
+https://help.dreamhost.com/hc/en-us/articles/115000676991-Pushing-your-DreamHost-Git-repository-to-GitHub
+https://github.com/hearvox/news-netrics-theme
+https://github.com/hearvox/news-netrics-theme.git
+https://github.com/hearvox/news-netrics-plugin.git
 
 // Make Alias example combining commands:
 alias check-all='wp core check-update && wp plugin list --update=available && wp theme list --update=available'
