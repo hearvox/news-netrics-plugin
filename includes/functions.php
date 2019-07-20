@@ -254,3 +254,16 @@ function newsstats_check_val( $value ) {
         return false;
     }
 }
+
+/* Test action */
+function echo_yo() {
+    echo '<h2>yo yo yo yo</h2>';
+}
+add_action( 'test_action', 'echo_yo' );
+
+
+/* Check value */
+function yono( $val ) {
+    $yono = ( $val ) ? 'yo' : 'no';
+    return $yono;
+}

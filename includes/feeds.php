@@ -525,3 +525,63 @@ function newsstats_parse_feed( $url ) {
 
 }
 
+
+/*******************************
+ =DISCOVER FEEDS
+ ******************************/
+/**
+ * Detect RSS feed within HMTL of an URL:
+ * <link rel="alternate" type="application/rss+xml" href=...>
+ *
+ * Used to extract feed URL from a site's homepage.
+ *
+ */
+function detect_feedXXX( $url ) {
+    if( $html = @DOMDocument::loadHTML( file_get_contents( $url ) ) ) {
+        $xpath   = new DOMXPath( $html );
+        $feeds   = $xpath->query( "//head/link[@href][@type='application/rss+xml']/@href" );
+
+        /* Array of URLs.
+        $results = array();
+        foreach ( $feeds as $feed ) {
+            $results[] = $feed->nodeValue;
+        }
+        */
+
+        // First URL.
+        return $feeds[0]->nodeValue;;
+    }
+    return false;
+}
+
+function detect_feed( $url ) {
+    $request = wp_remote_get( $url );
+
+    if( is_wp_error( $request ) ) {
+        return false; // Bail early
+    }
+
+    $body = wp_remote_retrieve_body( $request );
+    $dom  = new DOMDocument();
+
+    libxml_use_internal_errors( true ); // Suppress warnings (invalid code in HTML).
+    $dom->loadHTML( $body );
+    $xpath = new DomXpath( $dom );
+    $feeds = $xpath->query( "//head/link[@href][@type='application/rss+xml']/@href" );
+
+    /* Array of URLs.
+    $results = array();
+    foreach ( $feeds as $feed ) {
+        $results[] = $feed->nodeValue;
+    }
+    */
+    // First URL.
+    if ( $feeds && isset( $feeds[0]->nodeValue ) )
+        return $feeds[0]->nodeValue;
+    else {
+        return false;
+    }
+}
+
+
+

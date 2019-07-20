@@ -14,9 +14,12 @@ nn-p
 nn-t
 
 git add .
-git commit -m "[Comment]"
+git commit -m "Owners viz"
 git push -u origin master
 islands plotters polled
+
+
+nn_articles['YYYY-MM'] = nn_articles_201905 and nn_articles_201905
 
 https://help.dreamhost.com/hc/en-us/articles/216445317-How-do-I-set-up-a-Git-repository-
 git log --oneline
@@ -300,12 +303,16 @@ reset( $query )
 $reflFunc = new ReflectionFunction('netrics_get_pubs_pagespeed_query');
 print $reflFunc->getFileName() . ':' . $reflFunc->getStartLine();
 
-*/
-// Start at: sctimes.com 834
-
 $query = netrics_get_pubs_ids( 300, 1150 );
 // print_r( $query->posts[0]  );
 netrics_get_pubs_pagespeed( $query );
+
+*/
+// Start at: sctimes.com 834
+
+echo 'yo';
+
+
 
 
 

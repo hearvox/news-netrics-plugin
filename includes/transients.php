@@ -101,7 +101,119 @@ function newsstats_get_all_publications() {
     wp_reset_postdata();
 }
 
+
+/**
+ * Get data for all CPT posts (Publication), with meta and tax terms.
+ *
+ * @todo Fn: for single pub, loop thru.
+ * @todo Fn: Reset, delete_transient( string $transient );
+ * @since   0.1.0
+ *
+ * @return array $pub_data Array of data for all CPT posts.
+ */
+function netrics_get_pub_data() {
+    $post_id   = $query->post->ID;
+    $post_meta = get_post_meta( $post_id );
+
+    $site_data = maybe_unserialize( $post_meta['nn_site'][0] );
+    // nn_articles_201905, nn_articles_201906
+
+    $term_owner  = get_the_terms( $post_id, 'owner' );
+    $pub_owner   = ( $term_owner && isset( $term_owner[0]->name ) ) ? $term_owner[0]->name : '';
+    $term_city   = get_the_terms( $post_id, 'region' );
+    $city        = ( $term_city && isset( $term_city[0]->name ) ) ? $term_city[0]->name : '';
+    $city_meta   = ( $term_city && isset( $term_city[0]->term_id ) )
+        ? get_term_meta( $term_city[0]->term_id ) : false;
+    $city_pop    = ( $city_meta && isset( $city_meta['nn_region_pop'][0] ) )
+        ? $city_meta['nn_region_pop'][0] : 0;
+    $city_latlon = ( $city_meta && isset( $city_meta['nn_region_latlon'][0] ) )
+        ? $city_meta['nn_region_latlon'][0] : '';
+    $term_county = ( $term_city && isset( $term_city[0]->parent ) )
+        ? get_term( $term_city[0]->parent ) : false;
+    $county      = ( $term_county && isset( $term_county->name ) ) ? $term_county->name : '';
+    $term_state  = ( $term_county && isset( $term_county->parent ) )
+        ? get_term( $term_county->parent ) : false;
+    $state       = ( $term_state && isset( $term_state->name ) ) ? $term_state->name : '';
+
+    // newsstats_check_val(
+    // $city_meta   = ( $term_city ) ? get_term_meta( $term_city[0]->term_id ) : 'no city';
+    // $pub_city    =
+    // $term_county = get_term( $term_city[0]->parent, 'region' );
+    // $term_state  = get_term( $term_county->parent, 'region' );
+
+
+    $pub_data[] = array(
+        'pub_id'      => $post_id,
+        'pub_title'   => $query->post->post_title,
+        'pub_link'    => get_permalink( $post_id ),
+        // 'pub_parent'  => $query->post->post_parent,
+        'pub_domain'  => $post_meta['nn_pub_site'][0],
+        'pub_name'    => $post_meta['nn_pub_name'][0],
+        'pub_circ'    => $post_meta['nn_pub_circ_ep'][0],
+        'pub_url'     => $post_meta['nn_pub_url'][0],
+        'pub_rss'     => $post_meta['nn_pub_rss'][0],
+        'pub_year'    => $post_meta['nn_pub_year'][0],
+        'pub_owner'   => $pub_owner,
+        'city'        => $city,
+        'county'      => $county,
+        'state'       => $state,
+        'city_pop'    => $city_pop,
+        'city_latlon' => $city_latlon,
+    );
+
+    return $pub_data;
+
+}
+
+
 /*
+
+
+Array
+(
+    [alexa] => Array
+        (
+            [rank] => 74977
+            [title] => Albuquerque Journal - ABQJournal
+            [desc] => Provides New Mexico news and sports.
+            [since] => 03-Feb-1996
+            [links] => 2273
+            [speed] => 2867
+            [speed_pc] => 26
+            [date] => 2019-06
+        )
+
+    [builtwith] => Array
+        (
+            [javascript] => 25
+            [analytics] => 39
+            [widgets] => 20
+            [hosting] => 4
+            [cms] => 2
+            [Web Server] => 8
+            [framework] => 6
+            [cdn] => 7
+            [media] => 4
+            [ssl] => 3
+            [ads] => 155
+            [Server] => 1
+            [CDN] => 1
+            [feeds] => 2
+            [payment] => 2
+            [Web Master] => 2
+            [css] => 2
+            [mx] => 4
+            [mobile] => 6
+            [mapping] => 3
+            [shop] => 1
+            [link] => 3
+            [copyright] => 1
+            [date] => 2019-06
+            [error] => 0
+        )
+
+)
+
 Array
 (
     [0] => Array
@@ -123,6 +235,8 @@ Array
             [city_latlon] => 45.4646|-98.4680
         )
 }
+
+
 */
 
 /**
@@ -339,17 +453,21 @@ function newsstats_set_pubs_pagespeed() {
     foreach ( $query->posts as $post ) {
         $articles = get_post_meta( $post->ID, 'nn_articles_201905', true);
 
-        foreach ($articles as $article ) {
+        if ( $articles ) {
 
-            if ( isset( $article['pagespeed'] ) && ! $article['pagespeed']['error'] ) {
-                $pgspeed = $article['pagespeed'];
+            foreach ($articles as $article ) {
 
-                foreach ($metrics as $metric ) {
-                    if ( $pgspeed[$metric] ) {
-                        $pubs_data[$metric][] = floatval( $pgspeed[$metric] );
+                if ( isset( $article['pagespeed'] ) && ! $article['pagespeed']['error'] ) {
+                    $pgspeed = $article['pagespeed'];
+
+                    foreach ($metrics as $metric ) {
+                        if ( $pgspeed[$metric] ) {
+                            $pubs_data[$metric][] = floatval( $pgspeed[$metric] );
+                        }
                     }
                 }
             }
+
         }
     }
 
