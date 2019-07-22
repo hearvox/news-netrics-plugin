@@ -220,10 +220,10 @@ function netrics_get_string_between( $start, $stop, $content ) {
  * @param int $post_id Post ID.
  * @return array
  */
-function netrics_save_feed_items( $post_id, $items, $meta_key = 'nn_articles_201906', $term_id = 6216  ) {
+function netrics_save_feed_items( $post_id, $items, $meta_key = 'nn_articles_201907', $term_id = 6221  ) {
     if ( $items && isset( $items[0]['url'] ) ) { // Add post_meta and set term.
         update_post_meta( $post_id, $meta_key, $items, true );
-        $terms = wp_set_post_terms( $post_id, $term_id, 'flag', true ); // Term: '201906'.
+        $terms = wp_set_post_terms( $post_id, $term_id, 'flag', true ); // Term: '201907'.
     } else {
         return false;
     }

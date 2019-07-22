@@ -69,4 +69,51 @@ function newsstats_home_cpt_posts( $query ) {
 /*******************************
  =POST META
  ******************************/
+/**
+ * Get array of post meta keys (with registration values).
+ *
+ * Test API:
+ * https://news.pubmedia.us/wp-json/wp/v2/publication
+ *
+ * @return array $pub_meta Array of post meta keys.
+ */
+function netrics_get_pub_meta() {
+    $pub_meta = array(
+        'nn_pub_name'      => array( 'News outlet name', 'string', 'sanitize_text_field' ),
+        'nn_pub_site'      => array( 'News outlet domain name', 'string', 'sanitize_text_field' ),
+        'nn_pub_url'       => array( 'News outlet URL', 'string', 'sanitize_text_field' ),
+        'nn_circ'          => array( 'Circulation', 'number', 'absint' ),
+        'nn_rank'          => array( 'AWIS Global Rank', 'number', 'absint' ),
+        'nn_pub_year'      => array( 'Year founded', 'number', 'absint' ),
+        // 'nn_pub_rss'       => array( 'RSS Feed URL', 'string', 'sanitize_text_field' ),
+        // 'nn_site'          => array( 'Site data from AWIS, BuitWith', 'string', 'wp_json_encode' ),
+    );
+
+    return $pub_meta;
+}
+
+/**
+ * Register term meta for taxonomies.
+ *
+ * Test API:
+ * https://news.pubmedia.us/wp-json/wp/v2/posts
+ *
+ * @return void
+ */
+function newsstats_reg_pub_meta() {
+    $pub_meta = netrics_get_pub_meta();
+
+    foreach ( $pub_meta as $key => $value ) {
+        $args = array(
+            'description'       => $value[0],
+            'type'              => $value[1], // string|boolean|integer|number
+            'sanitize_callback' => $value[2],
+            'single'            => true,
+            'show_in_rest'      => true,
+        );
+        register_meta( 'post', sanitize_key( $key ), $args );
+    }
+}
+add_action( 'init', 'newsstats_reg_pub_meta', 0 );
+
 

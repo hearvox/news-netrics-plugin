@@ -14,9 +14,12 @@ nn-p
 nn-t
 
 git add .
-git commit -m "Owners viz"
+git commit -m "New Pasges: Regions, Results (front), and Homepages"
 git push -u origin master
 islands plotters polled
+
+settings:
+git config -l
 
 
 nn_articles['YYYY-MM'] = nn_articles_201905 and nn_articles_201905
@@ -223,6 +226,7 @@ foreach ( $query->posts as $post ) {
 }
 
 //--------------------
+// Get Months's artciles from RSS Feed (make new flag and update term# below)
 $args = array(
     'post_type'      => 'publication',
     'orderby'        => 'title',
@@ -234,15 +238,17 @@ $args = array(
         array(
             'taxonomy' => 'flag',
             'field'    => 'term_id',
-            'terms'    => array( 6216, 6175, 6172 ), // '201906', 'none', 'json'
+            'terms'    => array( 6221, 6175, 6172 ), // '201907', 'none', 'json'
             'operator' => 'NOT IN',
         ),
     ),
 
 );
 $query = new WP_Query( $args );
-// $query = netrics_get_pubs_ids( 500, 900 );
+
 netrics_get_feeds( $query );
+
+// $query = netrics_get_pubs_ids( 500, 900 );
 
 //--------------------
 // Get articles from JSON posts.
@@ -307,10 +313,87 @@ $query = netrics_get_pubs_ids( 300, 1150 );
 // print_r( $query->posts[0]  );
 netrics_get_pubs_pagespeed( $query );
 
-*/
-// Start at: sctimes.com 834
 
-echo 'yo';
+
+//Check artilcles:
+<pre><?php
+
+$i = 0;
+$args = array(
+    'post_type'      => 'publication',
+    'orderby'        => 'title',
+    'order'          => 'ASC',
+    'posts_per_page' => 2000,
+    'offset'         => 0,
+    'fields'         => 'ids',
+    'tax_query' => array(
+        array(
+            'taxonomy' => 'flag',
+            'field'    => 'term_id',
+            // 'terms'    => array( 6221 ),
+            'terms'    => array( 6175, 6172 ), // 'none', 'json'
+            'operator' => 'NOT IN',
+        ),
+    ),
+);
+$query = new WP_Query( $args );
+
+foreach( $query->posts as $post_id) {
+    echo "$i\t$post_id\t";
+    $meta = get_post_meta( $post_id, 'nn_articles_201907', true);
+    if ( 3 === count( $meta ) && isset( $meta[0]['url'] ) ) {
+        // print_r( get_post_meta( $post_id, 'nn_articles_201907', true) );
+        echo "Success\n";
+    } else {
+        echo "ERROR\n";
+    }
+    $i++;
+}
+
+$args = array(
+    'post_type'      => 'publication',
+    // 'orderby'        => 'title',
+    // 'order'          => 'DESC',
+    'orderby'        => 'rand',
+    'posts_per_page' => 500,
+    'offset'         => 0,
+    'fields'         => 'ids',
+    'tax_query' => array(
+        array(
+            'taxonomy' => 'flag',
+            'field'    => 'term_id',
+            'terms'    => array( 6221, 6175, 6172 ), // '201907', 'none', 'json'
+            'operator' => 'NOT IN',
+        ),
+    ),
+
+);
+$query = new WP_Query( $args );
+
+netrics_get_feeds( $query );
+
+*/
+
+$args = array(
+    'post_type'      => 'publication',
+    'orderby'        => 'rand',
+    // 'order'          => 'DESC',
+    'posts_per_page' => 500,
+    'offset'         => 0,
+    'fields'         => 'ids',
+    'tax_query' => array(
+        array(
+            'taxonomy' => 'flag',
+            'field'    => 'term_id',
+            'terms'    => array( 6221, 6175, 6172 ), // '201907', 'none', 'json'
+            'operator' => 'NOT IN',
+        ),
+    ),
+
+);
+$query = new WP_Query( $args );
+
+netrics_get_feeds( $query );
 
 
 

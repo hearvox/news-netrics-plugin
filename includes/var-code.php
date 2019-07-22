@@ -668,6 +668,29 @@ delete_post_meta( $post->ID, 'nn_pub_circ_ep' );
 delete_post_meta( $post->ID, 'nn_pub_circ' );
 
 
+
+// Get/upload/set Featured Image
+$post_id = 4027;
+// $image_url = 'https://s.wordpress.com/mshots/v1/' . urlencode( get_post_meta( $post_id, 'nn_pub_url', true ) ) . '?w=800&h=600';
+
+$image = file_get_contents('http://www.affiliatewindow.com/logos/1961/logo.gif');
+file_put_contents('./myDir/myFile.png', $image);
+
+$image_url = 'https://hearingvoices.com/images/radface/radface_black1.jpg';
+$meta_id   = 0;
+
+// Upload image.
+// $media_id = media_sideload_image( $image_url, $post_id, get_post_meta( $post_id, 'nn_pub_site', true ) . ' homepage', 'id' ); // attachment ID
+$media_id = media_sideload_image( $image_url, $post_id, ' homepage', 'id' );
+print_r( $media_id );
+
+// Set as Featured Image
+if( ! empty( $media_id ) && ! is_wp_error( $media_id ) ) {
+    $meta_id = set_post_thumbnail( $post_id, $media_id );
+    print_r( $meta_id );
+}
+
+echo "Post: $post_id  /  FeatImg: $meta_id $image_url\n"; // Record success/fail.
 ?>
 
 
