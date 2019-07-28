@@ -242,9 +242,9 @@ function netrics_save_feed_items( $post_id, $items, $meta_key = 'nn_articles_201
  * @return string $articles  First element of exploded array.
  */
 function netrics_parse_json_items( $post_id ) {
-    $url      = get_post_meta( $post_id, 'nn_pub_rss', true ); // RSS file
-    $json     = newsstats_request_data( $url );
-    $posts = explode( '"post",', $posts );
+    $url   = get_post_meta( $post_id, 'nn_pub_rss', true ); // RSS file
+    $json  = newsstats_request_data( $url );
+    $posts = explode( '"post",', $json );
 
     if ( is_array( $posts ) && count( $posts ) > 1 ) {
 

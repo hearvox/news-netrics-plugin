@@ -131,7 +131,7 @@ function newsnetrics_settings_display() {
 
 
 /**
- * Outputs textarea displaying feed XML.
+ * Opens CSV file with data (tax terms and post meata) for new posts, then inserts posts..
  *
  * @since   0.1.0
  */
@@ -143,14 +143,15 @@ function newsnetrics_import_tax_terms( $csv ) {
         while ( ( $data = fgetcsv( $handle, 300, ',' ) ) !== FALSE ) {
             // $obj_id = newsstats_insert_term_city( $data );
             $obj_id = newsstats_insert_post_pub( $data );
-
-            $num     = count( $data );
+            $num    = count( $data );
             $row++;
             echo '<li>';
+
             for ( $c = 0; $c < $num; $c++ ) {
                 // echo $c . '-' . $data[$c] . ","; // Print array index#,
                 echo $data[$c] . ",";
             }
+
             echo $obj_id;
             echo '</li>';
         }
@@ -161,6 +162,11 @@ function newsnetrics_import_tax_terms( $csv ) {
     echo '</ol></pre>';
 }
 
+/**
+ *  Inserts new posts with data from array.
+ *
+ * @since   0.1.0
+ */
 function newsstats_insert_post_pub( $data ) {
     // Add new CPT post. $data =
     // 0-domain,1-name,2-city,3-state,4-city_id,5-owner,6-cms,7-url,8-rss,9-circ,10-year,11-circ_paid|circ_free|fmp_id
@@ -232,6 +238,76 @@ function newsstats_insert_term_city( $data ) {
     return $term_id;
 }
 
+
+function netrics_get_csv_data( $csv ) {
+    // home/wp_wugkzz/news.pubmedia.us/wp-content/plugins/news-netrics/import/us-census-2018-county-wp.csv
+    echo $exists = ( file_exists( $csv ) ) ? $csv . "\n" : "N'existe pas.\n";
+    $csv_array = array();
+    if ( ( $handle = fopen( $csv, 'r' ) ) !== FALSE ) {
+        $csv_array = array_map( 'str_getcsv', file( $csv ) );
+        fclose($handle);
+    } else {
+        echo 'Did not open.';
+    }
+    return $csv_array;
+}
+
+
+/**
+ * Update 'region' tax term meta (Census data for Counties).
+ *
+ * @uses    wp_insert_term()
+ *
+ * @param   int  $user_id  ID of newly registered user.
+ * @return  void
+ */
+function netrics_add_term_meta_county( $data_array ) {
+    /*
+    Array (
+        [0] => county_term_id
+        [1] => GEOID('nn_region_geoid')
+        [2] => county_name
+        [3] => state_name
+        [4] => slug
+        [5] => state_id
+        [6] => state_term_id
+        [7] => census_2018_pop ('nn_region_census'|)
+        [8] => pop_density_land ('nn_region_density')
+        [9] => area_total ('nn_region_area' and 'nn_region_census'|)
+        [10] => area_land ('nn_region_census'|)
+        [11] => area_water ('nn_region_census'|)
+        [12] => housing_units ('nn_region_census')
+        [13] => pop_density_housing
+    )
+    */
+
+    array_shift( $data_array ); // First element is column names.
+
+    foreach ( $data_array as $key => $data ) {
+        $term_id = absint( $data[0] );
+        $exists = term_exists( absint( $data[0] ), 'region', absint( $data[0] ) );
+
+        if ( term_exists( $term_id, 'region', absint( $data[0] ) ) ) {
+            $geoid = update_term_meta( $term_id, 'nn_region_geoid', sanitize_text_field( trim( $data[1],  '"' ) ) );
+            echo "$term_id $geoid {$data[1]}\n";
+            update_term_meta( $term_id, 'nn_region_density', floatval( $data[8] ) );
+            update_term_meta( $term_id, 'nn_region_area', floatval( $data[9] ) );
+
+            // Multiple census data values (pop. area, housing), pipe-separated.
+            $census =
+                absint( $data[7] )  . '|' .  floatval( $data[9] ) . '|' .  floatval( $data[10] ) . '|' .
+                floatval( $data[11] ) . '|' .  absint( $data[12] );
+            update_term_meta( $term_id, 'nn_region_census', sanitize_text_field( $census ) );
+        } else {
+            echo "$term_id n'existe pas.\n";
+        }
+    }
+
+
+    return $exists;
+}
+
+
 /**
  * Add new tax term with term meta.
  *
@@ -290,7 +366,7 @@ function newsstats_insert_term_state( $data ) {
  *
  * @since   0.1.0
  */
-function newsnetrics_upodate_feed_xml() {
+function newsnetrics_update_feed_xml() {
     $xml = $date_pub = $date_build = $item_count = $feed = $items = $write = '';
     $options = newsnetrics_get_options(); // Options array: 'newsnetrics'.
 

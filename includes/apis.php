@@ -181,12 +181,19 @@ function netrics_get_pubs_pagespeed( $query, $strategy = 'mobile'  ) {
         foreach ( $items as $key => $item ) { // Get PageSpeed results for articles.
             // print_r( $item );
 
+            // Skip if URL already successfully retrieved PSI results ('error' > 0).
+            if ( isset( $item['error'] ) && $item['error'] ) {
+                continue;
+            }
+
+            // Run PSI.
             if ( isset( $item['url'] ) && wp_http_validate_url( $item['url'] ) ) {
                 echo $item['url'] . "\n";
                 $pagespeed = netrics_get_pagespeed( $item['url'], $strategy ); // Run PageSpeed test.
                 print_r( $pagespeed );
             }
 
+            // Store PSI results in post meta.
             if ( $pagespeed ) { // Unsuccessful remote request.
                 $terms = netrics_save_pagespeed( $post_id, $pagespeed, $key );
                 print_r( $terms );
@@ -209,7 +216,7 @@ function netrics_get_pubs_pagespeed( $query, $strategy = 'mobile'  ) {
  * @param int $post_id Post ID.
  * @return string $url Post meta value
  */
-function netrics_get_pub_items( $post_id, $meta_key = 'nn_articles_201906' ) {
+function netrics_get_pub_items( $post_id, $meta_key = 'nn_articles_201907' ) {
     $items = get_post_meta( $post_id, $meta_key, true ); // Articles.
 
     if ( is_array( $items ) && isset( $items[0]['url'] ) ) {
@@ -220,7 +227,7 @@ function netrics_get_pub_items( $post_id, $meta_key = 'nn_articles_201906' ) {
 }
 
 /**
- * Get
+ * Run Pagespeed Insights test for URL then return results.
  *
  * @since   0.1.0
  *
@@ -277,14 +284,14 @@ function netrics_get_pagespeed( $url, $strategy = 'mobile' ) {
  * @param int $post_id Post ID.
  * @return string $url Post meta value
  */
-function netrics_save_pagespeed( $post_id, $pagespeed, $key = 0, $term_id = 6198 ) {
+function netrics_save_pagespeed( $post_id, $pagespeed, $key = 0, $term_id = 6222 ) {
     if ( $pagespeed ) {
-        $items = get_post_meta( $post_id, 'nn_articles_201906', true );
+        $items = get_post_meta( $post_id, 'nn_articles_201907', true );
         $items[$key]['pagespeed'] = $pagespeed; // Save results as array in post_meta.
-        update_post_meta( $post_id, 'nn_articles_201906', $items );
+        update_post_meta( $post_id, 'nn_articles_201907', $items );
         $terms = wp_set_post_terms( $post_id, array( $term_id ), 'flag', true ); // Flag success.
     } else {
-        $terms = wp_set_post_terms( $post_id, '1906redo' . $key, 'post_tag', true ); // Flag error.
+        $terms = wp_set_post_terms( $post_id, '1907redo' . $key, 'post_tag', true ); // Flag error.
     }
 
     return $terms;

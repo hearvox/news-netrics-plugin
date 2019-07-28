@@ -14,7 +14,7 @@ nn-p
 nn-t
 
 git add .
-git commit -m "New Pasges: Regions, Results (front), and Homepages"
+git commit -m "2019-07 articles"
 git push -u origin master
 islands plotters polled
 
@@ -314,8 +314,8 @@ $query = netrics_get_pubs_ids( 300, 1150 );
 netrics_get_pubs_pagespeed( $query );
 
 
-
-//Check artilcles:
+______________________
+//Check articles:
 <pre><?php
 
 $i = 0;
@@ -350,6 +350,8 @@ foreach( $query->posts as $post_id) {
     $i++;
 }
 
+______________________
+Get articles:
 $args = array(
     'post_type'      => 'publication',
     // 'orderby'        => 'title',
@@ -376,24 +378,25 @@ netrics_get_feeds( $query );
 
 $args = array(
     'post_type'      => 'publication',
-    'orderby'        => 'rand',
-    // 'order'          => 'DESC',
-    'posts_per_page' => 500,
-    'offset'         => 0,
+    'orderby'        => 'title',
+    'order'          => 'ASC',
+    'posts_per_page' => 200,
+    'offset'         => 405,
     'fields'         => 'ids',
     'tax_query' => array(
         array(
             'taxonomy' => 'flag',
             'field'    => 'term_id',
-            'terms'    => array( 6221, 6175, 6172 ), // '201907', 'none', 'json'
-            'operator' => 'NOT IN',
+            'terms'    => array( 6221 ), // '201907',
+            // 'terms'    => array( 6221, 6175, 6172 ), // '201907', 'none', 'json'
+            // 'operator' => 'NOT IN',
         ),
     ),
 
 );
 $query = new WP_Query( $args );
 
-netrics_get_feeds( $query );
+netrics_get_pubs_pagespeed( $query );
 
 
 

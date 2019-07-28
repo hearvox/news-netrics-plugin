@@ -3,6 +3,7 @@
   <head>
     <title>Counties</title>
     <meta name="viewport" content="initial-scale=1.0">
+    <!-- https://news.pubmedia.us/wp-content/plugins/news-netrics/popnews/counties.html -->
     <meta charset="utf-8">
     <style>
         /* Always set the map height explicitly to define the size of the div
@@ -27,9 +28,8 @@
 
         .nicebox {
             position: absolute;
-            text-align: center;
             font-family: "Roboto", "Arial", sans-serif;
-            font-size: 13px;
+            font-size: 1rem;
             z-index: 5;
             box-shadow: 0 4px 6px -4px #333;
             padding: 5px 10px;
@@ -49,8 +49,8 @@
         #data-box {
             top: 10px;
             left: 500px;
-            height: 45px;
-            line-height: 45px;
+            height: 5rem;
+            line-height: 1.6;
             display: none;
         }
 
@@ -67,13 +67,13 @@
 
         .color-key {
             background: linear-gradient(to right,
-                  hsl(5, 69%, 54%) 0%,
-                  hsl(29, 71%, 51%) 17%,
-                  hsl(54, 74%, 47%) 33%,
-                  hsl(78, 76%, 44%) 50%,
-                  hsl(102, 78%, 41%) 67%,
-                  hsl(127, 81%, 37%) 83%,
-                  hsl(151, 83%, 34%) 100%);
+                hsl(5, 69%, 54%) 0%,
+                hsl(29, 71%, 51%) 17%,
+                hsl(54, 74%, 47%) 33%,
+                hsl(78, 76%, 44%) 50%,
+                hsl(102, 78%, 41%) 67%,
+                hsl(127, 81%, 37%) 83%,
+                hsl(151, 83%, 34%) 100%);
             flex: 1;
             -webkit-box-flex: 1;
             margin: 0 5px;
@@ -82,9 +82,9 @@
             line-height: 1.0em;
         }
 
-        #data-value {
-            font-size: 1.2em;
-            font-weight: 500;
+        #data-value,
+        #data-val-2 {
+            font-size: 1.1em;
         }
 
         #data-label {
@@ -93,7 +93,7 @@
             padding-right: 10px;
         }
 
-        #data-label:after { content: ':' }
+        /*#data-label:after { content: ':' }*/
 
         #data-caret {
             margin-left: -5px;
@@ -110,8 +110,8 @@
 <div id="controls" class="nicebox">
     <div>
         <select id="census-variable">
-            <option value="0">Total population</option>
-            <option value="1">Population density</option>
+            <option value="1">Total population</option>
+            <option value="2">Population density</option>
             <!-- <option value="2">Land area</option> -->
         </select>
     </div>
@@ -123,11 +123,34 @@
 </div><!-- #controls -->
 <div id="data-box" class="nicebox">
     <label id="data-label" for="data-value"></label>
-    <span id="data-value"></span>
+    <div>Pop.: <span id="data-value"></span></div>
+    <div>/sq.mi.: <span id="data-val-2"></span></div>
 </div>
 
 <div id="map"></div>
+
+
+
 <pre id="log" style="clear: both; margin-top: 0; height: 1.5rem;">data</pre>
+
+<?php
+/*
+[["GEO_ID","POP","DENSITY","GEONAME","state","county"],
+["0500000US01001","55601","93.534505205","Autauga County, Alabama","01","001"],
+]
+*/
+
+$states = netrics_get_state_terms();
+
+foreach ( $states as $state ) {
+    $counties = netrics_get_county_terms( $state->term_id );
+
+    foreach ( $counties as $county ) {
+        echo "{$county->term_id},{$county->count}";
+    }
+}
+
+?>
 <script async defer
 src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCf1_AynFKX8-A4Xh1geGFZwq1kgUYAtZc&callback=initMap"></script>
 
@@ -152,7 +175,7 @@ function initMap() {
     // load the map
     map = new google.maps.Map(document.getElementById('map'), {
         center: {lat: 40, lng: -100},
-        zoom: 4,
+        zoom: 5,
         styles: mapStyle
     });
 
@@ -176,7 +199,7 @@ function initMap() {
 function loadMapShapes() {
     // load US county outline polygons from a GeoJson file
     map.data.loadGeoJson(
-        'https://news.pubmedia.us/wp-content/plugins/news-netrics/popnews/us-counties-gz_2010_us_050_00_20m.json',
+        'https://news.pubmedia.us/wp-content/plugins/news-netrics/geo/us-counties-gz_2010_us_050_00_20m.json',
         { idPropertyName: 'GEO_ID' }
     );
 
@@ -193,22 +216,27 @@ function loadMapShapes() {
  *
  * @param {string} variable
  */
-function loadCensusData(variable) {
+function loadCensusData(selection) {
     // load the requested variable from the census API (using local copies)
     var xhr = new XMLHttpRequest();
     xhr.open(
         'GET',
-        'https://news.pubmedia.us/wp-content/plugins/news-netrics/popnews/census-population-county.json?v=003'
+        'https://news.pubmedia.us/wp-content/plugins/news-netrics/geo/census-population-counties.json'
     );
 
     xhr.onload = function() {
         var censusData = JSON.parse(xhr.responseText);
-        censusData.shift(); // the first row contains column names
-        // var log = '';
+        censusData.shift(); // the first row contains column names.
+        document.getElementById('log').textContent = censusData;
+
+        var log = '';
 
         censusData.forEach(function(row) {
-            var censusVariable = parseFloat(row[variable]);
-            var countyId = '0500000US' + row[3] + row[4];
+            var censusVariable = parseFloat(row[selection]);
+            var countyId = row[0];
+
+            // console.log(countyId + row[3]);
+            // document.getElementById('log').innerHTML = countyId + "\t" + row[3];
 
             // keep track of min and max values
             if (censusVariable < censusMin) {
@@ -219,16 +247,11 @@ function loadCensusData(variable) {
                 censusMax = censusVariable;
             }
 
-            // console.log(countyId + ' ' + row[2] + ' ' + censusVariable);
-
             // update the existing row with the new data
-            map.data
-                .getFeatureById(countyId)
-                .setProperty('census_variable', censusVariable)
-
-            map.data
-                .getFeatureById(countyId)
-                .setProperty('census_name', row[2]);
+            map.data.getFeatureById(countyId).setProperty('census_variable', censusVariable)
+            map.data.getFeatureById(countyId).setProperty('census_name', row[3]);
+            map.data.getFeatureById(countyId).setProperty('pop_total', row[1]);
+            map.data.getFeatureById(countyId).setProperty('pop_density', row[2]);
 
         });
 
@@ -261,7 +284,7 @@ function clearCensusData() {
  * @param {google.maps.Data.Feature} feature
  */
 function styleFeature(feature) {
-
+/*
     var low = [5, 69, 54];  // color of smallest datum
     var high = [151, 83, 34];   // color of largest datum
 
@@ -274,11 +297,39 @@ function styleFeature(feature) {
         // calculate an integer color based on the delta
         color[i] = (high[i] - low[i]) * delta + low[i];
     }
+*/
+
+    var selectBox = document.getElementById('census-variable');
+    var selection = selectBox.options[selectBox.selectedIndex].value;
+
+    var level_high = 40000;
+    var level_mid  = 4000;
+
+    // Quartiles (approx.)å
+    var level_1 = 9000;
+    var level_2 = 19000;
+    var level_3 = 37000;
+    var level_4 = 93000;
+
+    if ( selection == 2 ) {
+        level_high = 30;
+        level_mid  = 3;
+    }
+
+    // Color based on pop.
+    var pop   = feature.getProperty('census_variable');
+    var color = [5, 69, 54];
+
+    if ( pop > level_high ) {
+        color = [151, 83, 34];
+    } else if ( pop > level_mid ) {
+        color = [54, 75, 60];
+    }
 
     // determine whether to show this shape or not
     var showRow = true;
     if (feature.getProperty('census_variable') == null || isNaN(feature.getProperty('census_variable'))) {
-        showRow = false;
+        // showRow = false;
     }
 
     var outlineWeight = 0.5, zIndex = 1;
@@ -286,7 +337,7 @@ function styleFeature(feature) {
         outlineWeight = zIndex = 2;
     }
 
-    document.getElementById('log').innerHTML = censusMax + ' ' + censusMin + ' ' + feature.getProperty('census_variable');
+    // document.getElementById('log').innerHTML = censusMax + "\t" + pop + "\t" + 'hsl(' + color[0] + ',' + color[1] + '%,' + color[2] + '%)' + "\t" +censusMin;
 
     return {
         strokeWeight: outlineWeight,
@@ -310,9 +361,13 @@ function mouseInToRegion(e) {
     var percent = (e.feature.getProperty('census_variable') - censusMin) / (censusMax - censusMin) * 100;
 
     // update the label
+    pop_total   = parseFloat( e.feature.getProperty('pop_total') );
+    pop_density = parseFloat( e.feature.getProperty('pop_density') ).toFixed(1);
     // document.getElementById('data-label').textContent = e.feature.getProperty('NAME');
     document.getElementById('data-label').textContent = e.feature.getProperty('census_name');
-    document.getElementById('data-value').textContent = e.feature.getProperty('census_variable').toLocaleString();
+    // document.getElementById('data-value').textContent = e.feature.getProperty('census_variable').toLocaleString();
+    document.getElementById('data-value').textContent = pop_total.toLocaleString();
+    document.getElementById('data-val-2').textContent = pop_density.toLocaleString();
     document.getElementById('data-box').style.display = 'block';
     document.getElementById('data-caret').style.display = 'block';
     document.getElementById('data-caret').style.paddingLeft = percent + '%';
@@ -328,15 +383,28 @@ function mouseOutOfRegion(e) {
     e.feature.setProperty('county', 'normal');
 }
 
+
+
+
+
+
 /*
 
 https://storage.googleapis.com/mapsdevsite/json/states.js
 http://eric.clst.org/tech/usgeojson/
 https://raw.githubusercontent.com/kjhealy/us-county/master/data/geojson/gz_2010_us_050_00_20m.json
 https://news.pubmedia.us/wp-content/plugins/news-netrics/popnews/counties.html
+https://api.census.gov/data/2018/pep/population?get=GEO_ID,POP,DENSITY,GEONAME&for=county:*
 
 ["8303","0.4862974641","Kusilvak Census Area, Alaska","02","158"],
 ["14309","6.834634765","Oglala Lakota County, South Dakota","46","102"],
+
+[["GEO_ID","POP","DENSITY","GEONAME","state","county"],
+["0500000US01001","55601","93.534505205","Autauga County, Alabama","01","001"],
+]
+
+$states = netrics_get_state_terms();
+
 */
 </script>
 
