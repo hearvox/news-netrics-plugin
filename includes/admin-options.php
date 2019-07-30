@@ -261,7 +261,7 @@ function netrics_get_csv_data( $csv ) {
  * @param   int  $user_id  ID of newly registered user.
  * @return  void
  */
-function netrics_add_term_meta_county( $data_array ) {
+function netrics_update_term_meta_county( $data_array ) {
     /*
     Array (
         [0] => county_term_id
@@ -274,8 +274,8 @@ function netrics_add_term_meta_county( $data_array ) {
         [7] => census_2018_pop ('nn_region_census'|)
         [8] => pop_density_land ('nn_region_density')
         [9] => area_total ('nn_region_area' and 'nn_region_census'|)
-        [10] => area_land ('nn_region_census'|)
-        [11] => area_water ('nn_region_census'|)
+        [10] => area_water ('nn_region_census'|)
+        [11] => area_land ('nn_region_census'|)
         [12] => housing_units ('nn_region_census')
         [13] => pop_density_housing
     )
@@ -288,16 +288,17 @@ function netrics_add_term_meta_county( $data_array ) {
         $exists = term_exists( absint( $data[0] ), 'region', absint( $data[0] ) );
 
         if ( term_exists( $term_id, 'region', absint( $data[0] ) ) ) {
-            $geoid = update_term_meta( $term_id, 'nn_region_geoid', sanitize_text_field( trim( $data[1],  '"' ) ) );
-            echo "$term_id $geoid {$data[1]}\n";
-            update_term_meta( $term_id, 'nn_region_density', floatval( $data[8] ) );
-            update_term_meta( $term_id, 'nn_region_area', floatval( $data[9] ) );
+            // $geoid = update_term_meta( $term_id, 'nn_region_geoid', sanitize_text_field( trim( $data[1],  '"' ) ) );
+            $dens = update_term_meta( $term_id, 'nn_region_density', floatval( $data[8] ) );
+            // update_term_meta( $term_id, 'nn_region_area', floatval( $data[9] ) );
 
             // Multiple census data values (pop. area, housing), pipe-separated.
             $census =
                 absint( $data[7] )  . '|' .  floatval( $data[9] ) . '|' .  floatval( $data[10] ) . '|' .
                 floatval( $data[11] ) . '|' .  absint( $data[12] );
             update_term_meta( $term_id, 'nn_region_census', sanitize_text_field( $census ) );
+            echo "$term_id $dens {$data[8]}\n";
+
         } else {
             echo "$term_id n'existe pas.\n";
         }

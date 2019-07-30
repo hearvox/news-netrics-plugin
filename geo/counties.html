@@ -64,7 +64,7 @@
             display: -webkit-box;
             padding-top: 7px
         }
-
+/*
         .color-key {
             background: linear-gradient(to right,
                 hsl(5, 69%, 54%) 0%,
@@ -74,6 +74,21 @@
                 hsl(102, 78%, 41%) 67%,
                 hsl(127, 81%, 37%) 83%,
                 hsl(151, 83%, 34%) 100%);
+            flex: 1;
+            -webkit-box-flex: 1;
+            margin: 0 5px;
+            text-align: left;
+            font-size: 1.0em;
+            line-height: 1.0em;
+        }
+*/
+        .color-key {
+            background: linear-gradient(to right,
+                hsl(193, 61%, 92%) 0%,
+                hsl(207, 46%, 80%) 25%,
+                hsl(230, 34%, 66%) 50%,
+                hsl(277, 32%, 50%) 75%,
+                hsl(303, 79%, 28%) 100%);
             flex: 1;
             -webkit-box-flex: 1;
             margin: 0 5px;
@@ -112,6 +127,9 @@
         <select id="census-variable">
             <option value="4">Daily Newspapers</option>
             <option value="5">Circulation</option>
+            <option value="6">Circ./Pop.%</option>
+            <option value="7">Circ.(1K)/Paper</option>
+            <option value="8">Paper/Pop.(1M)</option>
             <option value="1">Total population</option>
             <option value="2">Population density</option>
             <!-- <option value="2">Land area</option> -->
@@ -182,10 +200,7 @@ function initMap() {
 /** Loads the county boundary polygons from a GeoJSON source. */
 function loadMapShapes() {
     // load US county outline polygons from a GeoJson file
-    map.data.loadGeoJson(
-        'https://news.pubmedia.us/wp-content/plugins/news-netrics/geo/us-counties-gz_2010_us_050_00_20m.json',
-        { idPropertyName: 'GEO_ID' }
-    );
+    map.data.loadGeoJson('data/us-counties-gz_2010_us_050_00_20m.json', { idPropertyName: 'GEO_ID' });
 
     // wait for the request to complete by listening for the first feature to be added
     google.maps.event.addListenerOnce(map.data, 'addfeature', function() {
@@ -203,10 +218,7 @@ function loadMapShapes() {
 function loadCensusData(selection) {
     // load the requested variable from the census API (using local copies)
     var xhr = new XMLHttpRequest();
-    xhr.open(
-        'GET',
-        'https://news.pubmedia.us/wp-content/plugins/news-netrics/import/us-census-2018-county.json?v=004'
-    );
+    xhr.open('GET', 'data/us-census-2018-county.json?v=006');
 
     xhr.onload = function() {
         var censusData = JSON.parse(xhr.responseText);
@@ -217,8 +229,42 @@ function loadCensusData(selection) {
         var length = censusData.length;
 
         censusData.forEach(function(row) {
-            var censusVariable = parseFloat(row[selection]);
+
+
+
+/*
+
+    var levels = [
+        0: [],
+        papers: [93000, 37000, 19000, 9000], // Population.
+        pop: [30, 20, 10, 5], // Population densinty.
+        density: [100000, 50000, 9000, 900], // Circulation.
+        papers: [4, 3, 2, 1], // Papers.
+    ];
+
+<option value="papers">Daily Newspapers</option>
+<option value="circ">Circulation</option>
+<option value="circ_per_pop">Circ.(1K)/Pop.</option>
+<option value="circ_per_pub">Circ.(1K)/Paper</option>
+<option value="pub_per_pop">Paper/Pop.(1M)</option>
+<option value="pop">Total population</option>
+<option value="density">Population density</option>
+
+*/
+
+
+
+
             var countyId = row[0];
+            censusVariable = parseFloat(row[selection]);
+
+            if ( selection == 6 ) {
+                censusVariable = ( row[5] ) ? (row[5] / row[1]) * 100 : 0; // circ_pop_pc
+            } else if ( selection == 7 ) {  // circ_per_pub
+                censusVariable = ( row[4] ) ? (row[5] / 1000) / row[4] : 0;
+            } else if ( selection == 8 ) {  // circ_per_pub
+                censusVariable = ( row[4] ) ? row[4] / (row[1] / 1000000) : 0; // pub_per_pop
+            }
 
             // console.log(countyId + row[3]);
             // document.getElementById('log').innerHTML = countyId + "\t" + row[3];
@@ -282,6 +328,9 @@ function styleFeature(feature) {
         // calculate an integer color based on the delta
         color[i] = (high[i] - low[i]) * delta + low[i];
     }
+
+    // fillColor: 'hsl(' + color1[0] + ',' + color1[1] + '%,' + color1[2] + '%)',
+
 */
 
     var selectBox = document.getElementById('census-variable');
@@ -293,32 +342,23 @@ function styleFeature(feature) {
         [],
         [93000, 37000, 19000, 9000], // Population.
         [30, 20, 10, 5], // Population densinty.
-        [100000, 50000, 9000, 900], // Circulation.
+        [],
         [4, 3, 2, 1], // Papers.
+        [100000, 50000, 9000, 900], // Circulation.
+        [75, 50, 5, 0.1], // circ_pop_pc
+        [1000, 100, 5, 0.1], // circ_per_pub
+        [100, 50, 10, 0.1], // pub_per_pop
     ];
 
-    var colors = [
-        [303, 79, 28],
-        [277, 32, 50],
-        [230, 34, 66],
-        [207, 46, 80],
-        [193, 64, 96]
-    ];
+    var colors = ['hsl(303, 79%, 28%)', 'hsl(277, 32%, 50%)', 'hsl(230, 34%, 66%)', 'hsl(207, 46%, 80%)', 'hsl(193, 61%, 92%)'];
 
-    if ( num >= levels[selection][0] ) {
-        color1 = colors[0] // [151, 83, 34];
-    } else if ( num >= levels[selection][1] ) {
-        color1 = colors[1] // [78, 76, 44];
-    } else if ( num >= levels[selection][2] ) {
-        color1 = colors[2] // [54, 75, 60];
-    } else if ( num >= levels[selection][3] ) {
-        color1 = colors[3] // [29, 71, 51];
-    } else {
-        color1 = colors[4] // [5, 69, 54];
-    }
-
-    // console.log( 'levels[selection] ' + levels[selection] );
-    // document.getElementById('log').innerHTML = countyId + "\t" + row[3];
+    // Get fill color from selection level variable.
+    level = levels[selection];
+    color = colors[4];
+    color = (num >= level[0]) ? colors[0] : color;
+    color = (num < level[0] && num >= level[1]) ? colors[1] : color;
+    color = (num < level[1] && num >= level[2]) ? colors[2] : color;
+    color = (num < level[2] && num >= level[3]) ? colors[3] : color;
 
     // determine whether to show this shape or not
     var showRow = true;
@@ -331,13 +371,14 @@ function styleFeature(feature) {
         outlineWeight = zIndex = 2;
     }
 
-    // document.getElementById('log').innerHTML = censusMax + "\t" + pop + "\t" + 'hsl(' + color[0] + ',' + color[1] + '%,' + color[2] + '%)' + "\t" +censusMin;
+    // console.log( 'levels[selection] ' + levels[selection] );
+    // document.getElementById('log').innerHTML = censusMax + "\t" + color1 + "\t" +censusMin;
 
     return {
         strokeWeight: outlineWeight,
         strokeColor: '#fff',
         zIndex: zIndex,
-        fillColor: 'hsl(' + color1[0] + ',' + color1[1] + '%,' + color1[2] + '%)',
+        fillColor: color,
         fillOpacity: 0.85,
         visible: showRow
     };
@@ -385,6 +426,24 @@ function mouseOutOfRegion(e) {
 
 
 /*
+
+
+    var levels = [
+        0: [],
+        papers: [93000, 37000, 19000, 9000], // Population.
+        pop: [30, 20, 10, 5], // Population densinty.
+        density: [100000, 50000, 9000, 900], // Circulation.
+        papers: [4, 3, 2, 1], // Papers.
+    ];
+
+<option value="papers">Daily Newspapers</option>
+<option value="circ">Circulation</option>
+<option value="circ_per_pop">Circ.(1K)/Pop.</option>
+<option value="circ_per_pub">Circ.(1K)/Paper</option>
+<option value="pub_per_pop">Paper/Pop.(1M)</option>
+<option value="pop">Total population</option>
+<option value="density">Population density</option>
+
 
 https://storage.googleapis.com/mapsdevsite/json/states.js
 http://eric.clst.org/tech/usgeojson/

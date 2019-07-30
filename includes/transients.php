@@ -78,7 +78,7 @@ function newsstats_get_all_publications() {
                 // 'pub_parent'  => $query->post->post_parent,
                 'pub_domain'  => $post_meta['nn_pub_site'][0],
                 'pub_name'    => $post_meta['nn_pub_name'][0],
-                'pub_circ'    => $post_meta['nn_pub_circ_ep'][0],
+                'pub_circ'    => $post_meta['nn_circ'][0],
                 'pub_url'     => $post_meta['nn_pub_url'][0],
                 'pub_rss'     => $post_meta['nn_pub_rss'][0],
                 'pub_year'    => $post_meta['nn_pub_year'][0],

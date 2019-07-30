@@ -380,8 +380,8 @@ $args = array(
     'post_type'      => 'publication',
     'orderby'        => 'title',
     'order'          => 'ASC',
-    'posts_per_page' => 200,
-    'offset'         => 405,
+    'posts_per_page' => 400,
+    'offset'         => 801,
     'fields'         => 'ids',
     'tax_query' => array(
         array(
@@ -395,7 +395,7 @@ $args = array(
 
 );
 $query = new WP_Query( $args );
-
+// print_r( $query->posts );
 netrics_get_pubs_pagespeed( $query );
 
 

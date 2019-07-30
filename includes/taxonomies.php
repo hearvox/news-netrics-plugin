@@ -204,9 +204,9 @@ $nn_region_meta = array(
     'nn_region_fips'      => array( 'FIPS', 'string', 'sanitize_text_field', 'region' ),
     'nn_region_geoid'     => array( 'GE0 ID', 'string', 'sanitize_text_field', 'region' ),
     'nn_region_pop'       => array( 'Population', 'number', 'absint', 'region' ),
-    'nn_region_density'   => array( 'Pop. density (land)', 'number', 'floatval', 'region' ),
+    'nn_region_density'   => array( 'Pop. density', 'number', 'floatval', 'region' ),
     'nn_region_area'      => array( 'Area (total)', 'number', 'floatval', 'region' ),
-    'nn_region_census'    => array( 'Pop.|Area-total|Area-land|Area-water|Housing-units', 'string', 'sanitize_text_field', 'region'),
+    'nn_region_census'    => array( 'Pop|Area-total|Area-water|Area-land|Housing-units', 'string', 'sanitize_text_field', 'region'),
     'nn_region_latlon'    => array( 'Latitude|Longitude', 'string', 'sanitize_text_field', 'region' ),
     'nn_region_misc'      => array( 'Timezone|SimpleMapsID', 'string', 'sanitize_text_field', 'region'),
 );
@@ -483,6 +483,7 @@ function netrics_get_county_data( $set = 1, $page_id = 7594 ) {
                 'population'     => get_term_meta( $county_id, 'nn_region_pop', true ),
                 'pop_density'    => get_term_meta( $county_id, 'nn_region_density', true ),
                 'circ_sum'       => $circ_sum,
+                'state'          => $state->name,
             );
 
             $county = array_merge( (array)$county, $data );
@@ -509,6 +510,7 @@ Papers in Counties:
 5-    3
 6-    3
 7-    1
+10-   1
 
  */
 
@@ -548,6 +550,7 @@ Array
     [population] => 209550
     [pop_density] => 15
     [circ_sum] => 23610
+    [state] => AZ
 )
 */
 
@@ -566,9 +569,12 @@ Array
                 'pub_per_pop'    => round( $pub_per_pop, 3 ),
 */
 
-    $json = '[["GEO_ID","POP","DENSITY","GEONAME","pubs","circ","name","slug","term_id","parent"],' . "\n"; // Open JSON var.
+    $json = '[["GEO_ID","POP","DENSITY","GEONAME","pubs","circ","name","slug","term_id","parent","state"],' . "\n"; // Open JSON var.
     // Populate rows.
     foreach ($county_data as $data ) {
+        // Get state two-letter name.
+        $state = get_term_by( 'id', absint( $data['parent'] ), 'region' );
+
         $columns = array(
             'geoid'        =>  esc_attr( $data['geoid'] ),
             'population'   =>  absint( $data['population'] ),
@@ -580,12 +586,13 @@ Array
             'slug'         =>  esc_attr( $data['slug'] ),
             'term_id'      =>  absint( $data['term_id'] ),
             'parent'       =>  absint( $data['parent'] ),
+            'state'        =>  esc_attr( $data['parent'] ),
         );
 
         $json .= '["' . implode( '","', $columns ) . "\"],\n";
     }
 
-    $json  = trim( $json );
+    $json  = trim( $json, ",\n" );
     $json .= ']'; // Close JSON var.
 
     $write_data  = file_put_contents(  $file_path, $json );
