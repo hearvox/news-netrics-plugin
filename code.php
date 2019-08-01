@@ -381,7 +381,7 @@ $args = array(
     'orderby'        => 'title',
     'order'          => 'ASC',
     'posts_per_page' => 400,
-    'offset'         => 801,
+    'offset'         => 979,
     'fields'         => 'ids',
     'tax_query' => array(
         array(
@@ -395,8 +395,8 @@ $args = array(
 
 );
 $query = new WP_Query( $args );
-// print_r( $query->posts );
-netrics_get_pubs_pagespeed( $query );
+print_r( $query->posts );
+// netrics_get_pubs_pagespeed( $query );
 
 
 

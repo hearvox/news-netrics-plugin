@@ -550,14 +550,17 @@ foreach ( $query->posts as $post ) {
 // Update manually:
 $post_id = 4146;
 $items = array();
-$items[0]['title'] = '';
-$items[0]['url']   = '';
-$items[1]['title'] = '';
-$items[1]['url']   = '';
-$items[2]['title'] = '';
-$items[2]['url']   = '';
+// Replace "" with &quot;, then:
+$items[0]['title'] = "";
+$items[0]['url']   = "";
+$items[1]['title'] = "";
+$items[1]['url']   = "";
+$items[2]['title'] = "";
+$items[2]['url']   = "";
 
 $meta = netrics_save_feed_items( $post_id, $items );
+print_r( $meta );
+print_r( get_post_meta( $post_id, 'nn_articles_201907', true ) );
 
 // Send/get errors.
 $empty = 'empty';

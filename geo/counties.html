@@ -178,7 +178,8 @@ function initMap() {
     map = new google.maps.Map(document.getElementById('map'), {
         center: {lat: 40, lng: -100},
         zoom: 5,
-        styles: mapStyle
+        // styles: mapStyle,
+        mapTypeId: 'terrain',
     });
 
     // Set up the style rules and events for google.maps.Data
@@ -379,7 +380,7 @@ function styleFeature(feature) {
         strokeColor: '#fff',
         zIndex: zIndex,
         fillColor: color,
-        fillOpacity: 0.85,
+        fillOpacity: 0.75,
         visible: showRow
     };
 }
