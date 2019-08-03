@@ -416,7 +416,7 @@ function newsstats_set_pagespeed_avgs() {
     $metrics   = array( 'dom', 'requests', 'size', 'speed', 'tti', 'score' );
 
     foreach ( $query->posts as $post ) {
-        $articles  = get_post_meta( $post->ID, 'nn_articles_201907', true);
+        $articles  = get_post_meta( $post->ID, 'nn_articles_201905', true);
 
         if ( $articles ) {
             $pagespeed = wp_list_pluck( $articles, 'pagespeed' );
@@ -494,7 +494,7 @@ function netrics_get_pubs_pagespeed_query( $query = array() ) {
     $metrics   = array( 'dom', 'requests', 'size', 'speed', 'tti', 'score' );
 
     foreach ( $query->posts as $post ) {
-        $articles = get_post_meta( $post->ID, 'nn_articles_201907', true);
+        $articles = get_post_meta( $post->ID, 'nn_articles_201905', true);
 
         if ( ! $articles ) {
             continue;

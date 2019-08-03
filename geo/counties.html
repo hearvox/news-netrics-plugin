@@ -49,7 +49,7 @@
         #data-box {
             top: 10px;
             left: 500px;
-            height: 5rem;
+            height: 4rem;
             line-height: 1.6;
             display: none;
         }
@@ -97,15 +97,27 @@
             line-height: 1.0em;
         }
 
-        #data-value,
-        #data-val-2 {
-            font-size: 1.1em;
+        .data-values {
+            font-size: 0.8rem;
         }
 
         #data-label {
-            font-size: 1.2em;
+            font-size: 0.9rem;
             font-weight: normal;
             padding-right: 10px;
+        }
+
+        #data-pop,
+        #data-papers {
+            display: inline-block;
+            text-align: right;
+            padding-right: 0.5rem;
+            width: 4rem;
+        }
+
+        #data-papers {
+            padding-right: 0.5rem;
+            width: 3.1rem;
         }
 
         /*#data-label:after { content: ':' }*/
@@ -125,13 +137,13 @@
 <div id="controls" class="nicebox">
     <div>
         <select id="census-variable">
-            <option value="4">Daily Newspapers</option>
-            <option value="5">Circulation</option>
-            <option value="6">Circ./Pop.%</option>
-            <option value="7">Circ.(1K)/Paper</option>
-            <option value="8">Paper/Pop.(1M)</option>
-            <option value="1">Total population</option>
-            <option value="2">Population density</option>
+            <option value="4">Daily Newspapers for each County</option>
+            <option value="6">Circ./Population (~% readers)</option>
+            <option value="5">Circulation (all county papers)</option>
+            <option value="7">Circ.-1K/Paper (~newsroom size)</option>
+            <option value="8">Paper/Population-1M (~coverage)</option>
+            <option value="1">County Population</option>
+            <option value="2">Population Density (sq. mi.)</option>
             <!-- <option value="2">Land area</option> -->
         </select>
     </div>
@@ -143,8 +155,8 @@
 </div><!-- #controls -->
 <div id="data-box" class="nicebox">
     <label id="data-label" for="data-value"></label>
-    <div>Pop.: <span id="data-value"></span></div>
-    <div>/sq.mi.: <span id="data-val-2"></span></div>
+    <div class="data-values"><em>Pop.:</em>  <span id="data-pop"></span> (<span id="data-density" class="data-values"></span><em>/sq.mi.</em>)</div>
+    <div class="data-values"><em>Papers:</em> <span id="data-papers"></span> (<span id="data-circ" class="data-values"></span> <em>circ.</em>)</div>
 </div>
 
 <div id="map"></div>
@@ -158,17 +170,22 @@
 src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCf1_AynFKX8-A4Xh1geGFZwq1kgUYAtZc&callback=initMap"></script>
 
 <script>
-var mapStyle = [{
-    'stylers': [{'visibility': 'off'}]
-}, {
-    'featureType': 'landscape',
-    'elementType': 'geometry',
-    'stylers': [{'visibility': 'on'}, {'color': '#fcfcfc'}]
-}, {
-    'featureType': 'water',
-    'elementType': 'geometry',
-    'stylers': [{'visibility': 'on'}, {'color': '#bfd4ff'}]
-}];
+var mapStyle = [
+    {
+        'stylers': [{'visibility': 'off'}]
+    }, {
+        'featureType': 'road',
+        'elementType': 'geometry',
+        'stylers': [{'visibility': 'off'}]
+    }, {
+        'featureType': 'landscape',
+        'stylers': [{'visibility': 'on'}, {'color': '#fcfcfc'}]
+    }, {
+        'featureType': 'water',
+        'elementType': 'geometry',
+        'stylers': [{'visibility': 'on'}, {'color': '#bfd4ff'}]
+    },
+];
 var map;
 var censusMin = Number.MAX_VALUE, censusMax = -Number.MAX_VALUE;
 
@@ -178,7 +195,7 @@ function initMap() {
     map = new google.maps.Map(document.getElementById('map'), {
         center: {lat: 40, lng: -100},
         zoom: 5,
-        // styles: mapStyle,
+        styles: mapStyle,
         mapTypeId: 'terrain',
     });
 
@@ -284,6 +301,8 @@ function loadCensusData(selection) {
             map.data.getFeatureById(countyId).setProperty('census_name', row[3]);
             map.data.getFeatureById(countyId).setProperty('pop_total', row[1]);
             map.data.getFeatureById(countyId).setProperty('pop_density', row[2]);
+            map.data.getFeatureById(countyId).setProperty('papers', row[4]);
+            map.data.getFeatureById(countyId).setProperty('circulation', row[5]);
 
         });
 
@@ -291,6 +310,18 @@ function loadCensusData(selection) {
         document.getElementById('census-min').textContent = censusMin.toLocaleString();
         document.getElementById('census-max').textContent = censusMax.toLocaleString();
     };
+
+    var stateLayer = new google.maps.Data();
+    stateLayer.loadGeoJson('data/states.js');
+
+    stateLayer.setStyle({
+        strokeColor: '#79580e',
+        fillOpacity: 0,
+        strokeWeight: 4,
+        strokeOpacity: 1,
+    });
+
+    stateLayer.setMap(map);
 
     xhr.send();
 }
@@ -380,7 +411,7 @@ function styleFeature(feature) {
         strokeColor: '#fff',
         zIndex: zIndex,
         fillColor: color,
-        fillOpacity: 0.75,
+        fillOpacity: 0.9,
         visible: showRow
     };
 }
@@ -399,11 +430,15 @@ function mouseInToRegion(e) {
     // update the label
     pop_total   = parseFloat( e.feature.getProperty('pop_total') );
     pop_density = parseFloat( e.feature.getProperty('pop_density') ).toFixed(1);
+    papers      = parseFloat( e.feature.getProperty('papers') );
+    circulation = parseFloat( e.feature.getProperty('circulation') );
     // document.getElementById('data-label').textContent = e.feature.getProperty('NAME');
     document.getElementById('data-label').textContent = e.feature.getProperty('census_name');
     // document.getElementById('data-value').textContent = e.feature.getProperty('census_variable').toLocaleString();
-    document.getElementById('data-value').textContent = pop_total.toLocaleString();
-    document.getElementById('data-val-2').textContent = pop_density.toLocaleString();
+    document.getElementById('data-pop').textContent = pop_total.toLocaleString();
+    document.getElementById('data-density').textContent = pop_density.toLocaleString();
+    document.getElementById('data-papers').textContent = papers.toLocaleString();
+    document.getElementById('data-circ').textContent = circulation.toLocaleString();
     document.getElementById('data-box').style.display = 'block';
     document.getElementById('data-caret').style.display = 'block';
     document.getElementById('data-caret').style.paddingLeft = percent + '%';

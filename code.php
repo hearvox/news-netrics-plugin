@@ -381,9 +381,10 @@ $args = array(
     'orderby'        => 'title',
     'order'          => 'ASC',
     'posts_per_page' => 400,
-    'offset'         => 979,
+    'offset'         => 0,
     'fields'         => 'ids',
-    'tax_query' => array(
+    // 'post__in'       => array( 5186 ),
+    'tax_query'      => array(
         array(
             'taxonomy' => 'flag',
             'field'    => 'term_id',
@@ -395,8 +396,10 @@ $args = array(
 
 );
 $query = new WP_Query( $args );
-print_r( $query->posts );
-// netrics_get_pubs_pagespeed( $query );
+// print_r( $query->posts );
+netrics_get_pubs_pagespeed( $query );
+
+
 
 
 

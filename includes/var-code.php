@@ -562,6 +562,9 @@ $meta = netrics_save_feed_items( $post_id, $items );
 print_r( $meta );
 print_r( get_post_meta( $post_id, 'nn_articles_201907', true ) );
 
+//  Then run PSI (flag: 'manual').
+netrics_get_pubs_pagespeed( array( 4146, 4397, 4630, 5186 ) );
+
 // Send/get errors.
 $empty = 'empty';
 $error = new WP_Error();
@@ -694,6 +697,22 @@ if( ! empty( $media_id ) && ! is_wp_error( $media_id ) ) {
 }
 
 echo "Post: $post_id  /  FeatImg: $meta_id $image_url\n"; // Record success/fail.
+
+
+// =UPDATES
+newsstats_get_all_publications();
+print_r( get_transient( 'newsnetrics_pubs' ) );
+
+netrics_get_county_data();
+print_r( get_post_meta( 7594, 'nn_counties', true ) );
+
+netrics_get_region_data();
+print_r( get_post_meta( 7594, 'nn_states', true ) );
+
+$bytes = netrics_write_county_data();
+echo $bytes;
+
+
 ?>
 
 
