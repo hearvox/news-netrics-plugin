@@ -1,27 +1,20 @@
 <?php
-/*
-// Use as URL:
-https://news.pubmedia.us/wp-content/plugins/news-netrics/api/awis-query-php/urlinfo.php?site=
-
-https://news.pubmedia.us/wp-content/plugins/news-netrics/api/awis-query-php/urlinfo.php?site=ocregister.com
-
-// Use as code, without URL:
-include_once( '/home/dh_a332ee/news.pubmedia.us/wp-content/plugins/news-netrics/api/awis-query-php/urlinfo.php' );
-
-$accessKeyId     = 'AKIAJBV4OWGCGHDIL3PQ';
-$secretAccessKey = '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';
-$site            = $_GET['site'];
-
-$urlInfo = new UrlInfo($accessKeyId, $secretAccessKey, $site);
-$xml     = $urlInfo->getUrlInfo();
-
-*/
+/**
+ * Class to get domain data from Amazon's Alexa Web Information Sevice (AWIS).
+ *
+ * @since   0.1.1
+ *
+ * @package    News Netrics
+ * @subpackage news-netrics/includes/api/
+ */
 
 /**
- * Makes a request to AWIS for site info.
+ * Make request to AWIS, return data customized for News Netrics.
+ *
+ * Adapted from Code Samples for AWIS: PHP
+ * @see https://aws.amazon.com/awis/getting-started/
  */
 class UrlInfo {
-
     protected static $ActionName        = 'UrlInfo';
     protected static $ResponseGroupName = 'Rank,RankByCountry,LinksInCount,Speed,SiteData,ContactInfo';
     protected static $ServiceHost       = 'awis.amazonaws.com';
@@ -33,7 +26,6 @@ class UrlInfo {
     protected static $ServiceURI        = "/api";
     protected static $ServiceRegion     = "us-west-1";
     protected static $ServiceName       = "awis";
-
     public function UrlInfo($accessKeyId, $secretAccessKey, $site) {
         $this->accessKeyId = $accessKeyId;
         $this->secretAccessKey = $secretAccessKey;
@@ -41,9 +33,7 @@ class UrlInfo {
         $now = time();
         $this->amzDate = gmdate("Ymd\THis\Z", $now);
         $this->dateStamp = gmdate("Ymd", $now);
-
     }
-
     /**
      * Get site info from AWIS.
      */
@@ -59,18 +49,16 @@ class UrlInfo {
         $signingKey = $this->getSignatureKey();
         $signature = hash_hmac('sha256', $stringToSign, $signingKey);
         $authorizationHeader = $algorithm . ' ' . 'Credential=' . $this->accessKeyId . '/' . $credentialScope . ', ' .  'SignedHeaders=' . $signedHeaders . ', ' . 'Signature=' . $signature;
-
         $url = 'https://' . self::$ServiceHost . self::$ServiceURI . '?' . $canonicalQuery;
         $ret = self::makeRequest($url, $authorizationHeader);
-        echo "\nResults for " . $this->site .":\n\n";
-        echo $ret;
-        self::parseResponse($ret);
+        // echo "\nResults for " . $this->site .":\n\n";
+        // echo $ret;
+        $nn_data = self::parseResponse($ret);
+        return $nn_data;
     }
-
     protected function sign($key, $msg) {
         return hash_hmac('sha256', $msg, $key, true);
     }
-
     protected function getSignatureKey() {
         $kSecret = 'AWS4' . $this->secretAccessKey;
         $kDate = $this->sign($kSecret, $this->dateStamp);
@@ -79,7 +67,6 @@ class UrlInfo {
         $kSigning = $this->sign($kService, 'aws4_request');
         return $kSigning;
     }
-
     /**
      * Builds headers for the request to AWIS.
      * @return String headers for the request
@@ -100,7 +87,6 @@ class UrlInfo {
         }
         return ($list) ? implode("\n",$keyvalue) . "\n" : implode(';',$keyvalue) ;
     }
-
     /**
      * Builds query parameters for the request to AWIS.
      * Parameter names will be in alphabetical order and
@@ -122,7 +108,6 @@ class UrlInfo {
         }
         return implode('&',$keyvalue);
     }
-
     /**
      * Makes request to AWIS
      * @param String $url   URL to make request to
@@ -144,7 +129,6 @@ class UrlInfo {
         curl_close($ch);
         return $result;
     }
-
     /**
      * Parses XML response from AWIS and displays selected data
      * @param String $response    xml response from AWIS
@@ -153,38 +137,38 @@ class UrlInfo {
         $xml = new SimpleXMLElement($response,LIBXML_ERR_ERROR,false,'http://awis.amazonaws.com/doc/2005-07-11');
         if($xml->count() && $xml->Response->UrlInfoResult->Alexa->count()) {
             $info = $xml->Response->UrlInfoResult->Alexa;
-            $nice_array = array(
-                'Links In Count' => $info->ContentData->LinksInCount,
-                'Rank'           => $info->TrafficData->Rank
-            );
-
             $nn_alexa_arr = array(
                 'rank'     => $info->TrafficData->Rank,
-                'rank_us'  => $info->TrafficData->RankByCountry->Country[0]->Rank,
+                // 'rank_us'  => $info->TrafficData->RankByCountry->Country[0]->Rank,
                 'title'    => $info->ContentData->SiteData->Title,
                 'desc'     => $info->ContentData->SiteData->Description,
                 'since'    => $info->ContentData->SiteData->OnlineSince,
                 'links'    => $info->ContentData->LinksInCount,
                 'speed'    => $info->ContentData->Speed->MedianLoadTime,
                 'speed_pc' => $info->ContentData->Speed->Percentile,
+                'date'     => date( 'Y-m' ),
+                'error'    => 0,
             );
         }
-        foreach($nice_array as $k => $v) {
-            echo $k . ': ' . $v ."\n";
-        }
-
         $nn_alexa = array();
         foreach($nn_alexa_arr as $key => $value) {
             $nn_alexa[$key] = (string) $value;
         }
-
-        print_r( $nn_alexa );
-
+        return $nn_alexa;
     }
-
 }
-
 /*
+Array
+(
+    [rank] => 74977
+    [title] => Albuquerque Journal - ABQJournal
+    [desc] => Provides New Mexico news and sports.
+    [since] => 03-Feb-1996
+    [links] => 2273
+    [speed] => 2867
+    [speed_pc] => 26
+    [date] => 201906
+)
 // Commented out by BG 2019-02
 if (count($argv) < 4) {
     // echo "Usage: $argv[0] ACCESS_KEY_ID SECRET_ACCESS_KEY site $site\n";

@@ -72,33 +72,6 @@ function netrics_pagespeed( $array ) {
             <td><?php echo number_format( nstats_mean( $array['score'] ) * 100, 1, '.', ',' ); ?></td>
         </tr>
         <tr>
-            <th scope="row"><?php esc_attr_e( 'Maximum', 'newsnetrics' ); ?></th>
-            <td><?php echo number_format( nstats_max( $array['dom'] ), 1, '.', ',' ); ?></td>
-            <td><?php echo number_format( nstats_max( $array['requests'] ), 1, '.', ',' ); ?></td>
-            <td><?php echo size_format( nstats_max( $array['size'] ), 1 ); ?></td>
-            <td><?php echo number_format( nstats_max( $array['speed'] ) / 1000, 1, '.', ',' ); ?></td>
-            <td><?php echo number_format( nstats_max( $array['tti'] ) / 1000, 1, '.', ',' ); ?></td>
-            <td><?php echo number_format( nstats_max( $array['score'] ) * 100, 1, '.', ',' ); ?></td>
-        </tr>
-        <tr>
-            <th scope="row"><?php esc_attr_e( 'Minimum', 'newsnetrics' ); ?></th>
-            <td><?php echo number_format( nstats_min( $array['dom'] ), 1, '.', ',' ); ?></td>
-            <td><?php echo number_format( nstats_min( $array['requests'] ), 1, '.', ',' ); ?></td>
-            <td><?php echo size_format( nstats_min( $array['size'] ), 1 ); ?></td>
-            <td><?php echo number_format( nstats_min( $array['speed'] ) / 1000, 1, '.', ',' ); ?></td>
-            <td><?php echo number_format( nstats_min( $array['tti'] ) / 1000, 1, '.', ',' ); ?></td>
-            <td><?php echo number_format( nstats_min( $array['score'] ) * 100, 1, '.', ',' ); ?></td>
-        </tr>
-        <tr>
-            <th scope="row"><?php esc_attr_e( 'Range', 'newsnetrics' ); ?></th>
-            <td><?php echo number_format( nstats_range( $array['dom'] ), 1, '.', ',' ); ?></td>
-            <td><?php echo number_format( nstats_range( $array['requests'] ), 1, '.', ',' ); ?></td>
-            <td><?php echo size_format( nstats_range( $array['size'] ), 1 ); ?></td>
-            <td><?php echo number_format( nstats_range( $array['speed'] ) / 1000, 1, '.', ',' ); ?></td>
-            <td><?php echo number_format( nstats_range( $array['tti'] ) / 1000, 1, '.', ',' ); ?></td>
-            <td><?php echo number_format( nstats_range( $array['score'] ) * 100, 1, '.', ',' ); ?></td>
-        </tr>
-        <tr>
             <th scope="col"><?php esc_attr_e( 'Quartile 1', 'newsnetrics' ); ?></th>
             <td><?php echo number_format( nstats_q1( $array['dom'] ), 1, '.', ',' ); ?></td>
             <td><?php echo number_format( nstats_q1( $array['requests'] ), 1, '.', ',' ); ?></td>
@@ -135,6 +108,33 @@ function netrics_pagespeed( $array ) {
             <td><?php echo number_format( nstats_iqr( $array['score'] ) * 100, 1, '.', ',' ); ?></td>
         </tr>
         <tr>
+            <th scope="row"><?php esc_attr_e( 'Maximum', 'newsnetrics' ); ?></th>
+            <td><?php echo number_format( nstats_max( $array['dom'] ), 1, '.', ',' ); ?></td>
+            <td><?php echo number_format( nstats_max( $array['requests'] ), 1, '.', ',' ); ?></td>
+            <td><?php echo size_format( nstats_max( $array['size'] ), 1 ); ?></td>
+            <td><?php echo number_format( nstats_max( $array['speed'] ) / 1000, 1, '.', ',' ); ?></td>
+            <td><?php echo number_format( nstats_max( $array['tti'] ) / 1000, 1, '.', ',' ); ?></td>
+            <td><?php echo number_format( nstats_max( $array['score'] ) * 100, 1, '.', ',' ); ?></td>
+        </tr>
+        <tr>
+            <th scope="row"><?php esc_attr_e( 'Minimum', 'newsnetrics' ); ?></th>
+            <td><?php echo number_format( nstats_min( $array['dom'] ), 1, '.', ',' ); ?></td>
+            <td><?php echo number_format( nstats_min( $array['requests'] ), 1, '.', ',' ); ?></td>
+            <td><?php echo size_format( nstats_min( $array['size'] ), 1 ); ?></td>
+            <td><?php echo number_format( nstats_min( $array['speed'] ) / 1000, 1, '.', ',' ); ?></td>
+            <td><?php echo number_format( nstats_min( $array['tti'] ) / 1000, 1, '.', ',' ); ?></td>
+            <td><?php echo number_format( nstats_min( $array['score'] ) * 100, 1, '.', ',' ); ?></td>
+        </tr>
+        <tr>
+            <th scope="row"><?php esc_attr_e( 'Range', 'newsnetrics' ); ?></th>
+            <td><?php echo number_format( nstats_range( $array['dom'] ), 1, '.', ',' ); ?></td>
+            <td><?php echo number_format( nstats_range( $array['requests'] ), 1, '.', ',' ); ?></td>
+            <td><?php echo size_format( nstats_range( $array['size'] ), 1 ); ?></td>
+            <td><?php echo number_format( nstats_range( $array['speed'] ) / 1000, 1, '.', ',' ); ?></td>
+            <td><?php echo number_format( nstats_range( $array['tti'] ) / 1000, 1, '.', ',' ); ?></td>
+            <td><?php echo number_format( nstats_range( $array['score'] ) * 100, 1, '.', ',' ); ?></td>
+        </tr>
+        <tr>
             <th scope="col"><?php esc_attr_e( 'Standard Deviation', 'newsnetrics' ); ?></th>
             <td><?php echo number_format( nstats_sd( $array['dom'] ), 1, '.', ',' ); ?></td>
             <td><?php echo number_format( nstats_sd( $array['requests'] ), 1, '.', ',' ); ?></td>
@@ -169,7 +169,7 @@ function netrics_pagespeed_thead() {
  * Outputs HTML with array averages, quartiles, and standard deviations.
  *
  */
-function netrics_pagespeed_tbody( $array ) {
+function netrics_pagespeed_tbody( $array, $all = 1 ) {
     $tbody   = '';
     $metrics = netrics_get_pagespeed_metrics();
     $stats   = array( 'Mean', 'Maximum', 'Minimum', 'Range'. 'Quartile 1', 'Q2/Median', 'Quartile 1', 'Interquartile Range', 'Standard Deviation' );
@@ -180,53 +180,63 @@ function netrics_pagespeed_tbody( $array ) {
     }
     $tbody .= '</tr>';
 
-    $tbody .= '<tr><th scope="row">Maximum</th>';
-    foreach ( $metrics as $metric ) {
-        $tbody .= '<td>' . netrics_pagespeed_format( $metric, nstats_max( $array[ $metric ] ), 1 )  . '</td>';
-    }
-    $tbody .= '</tr>';
+    if ( $all ) {
 
-    $tbody .= '<tr><th scope="row">Minimum</th>';
-    foreach ( $metrics as $metric ) {
-        $tbody .= '<td>' . netrics_pagespeed_format( $metric, nstats_min( $array[ $metric ] ), 1 )  . '</td>';
-    }
-    $tbody .= '</tr>';
+        $tbody .= '<tr><th scope="row">Maximum</th>';
+        foreach ( $metrics as $metric ) {
+            $tbody .= '<td>' . netrics_pagespeed_format( $metric, nstats_max( $array[ $metric ] ), 1 )  . '</td>';
+        }
+        $tbody .= '</tr>';
 
-    $tbody .= '<tr><th scope="row">Range</th>';
-    foreach ( $metrics as $metric ) {
-        $tbody .= '<td>' . netrics_pagespeed_format( $metric, nstats_range( $array[ $metric ] ), 1 )  . '</td>';
-    }
-    $tbody .= '</tr>';
+        $tbody .= '<tr><th scope="row">Minimum</th>';
+        foreach ( $metrics as $metric ) {
+            $tbody .= '<td>' . netrics_pagespeed_format( $metric, nstats_min( $array[ $metric ] ), 1 )  . '</td>';
+        }
+        $tbody .= '</tr>';
 
-    $tbody .= '<tr><th scope="row">Quartile 1</th>';
-    foreach ( $metrics as $metric ) {
-        $tbody .= '<td>' . netrics_pagespeed_format( $metric, nstats_q1( $array[ $metric ] ), 1 )  . '</td>';
-    }
-    $tbody .= '</tr>';
+        $tbody .= '<tr><th scope="row">Range</th>';
+        foreach ( $metrics as $metric ) {
+            $tbody .= '<td>' . netrics_pagespeed_format( $metric, nstats_range( $array[ $metric ] ), 1 )  . '</td>';
+        }
+        $tbody .= '</tr>';
 
-    $tbody .= '<tr><th scope="row">Q2/Median</th>';
-    foreach ( $metrics as $metric ) {
-        $tbody .= '<td>' . netrics_pagespeed_format( $metric, nstats_q2( $array[ $metric ] ), 1 )  . '</td>';
-    }
-    $tbody .= '</tr>';
+        $tbody .= '<tr><th scope="row">Quartile 1</th>';
+        foreach ( $metrics as $metric ) {
+            $tbody .= '<td>' . netrics_pagespeed_format( $metric, nstats_q1( $array[ $metric ] ), 1 )  . '</td>';
+        }
+        $tbody .= '</tr>';
 
-    $tbody .= '<tr><th scope="row">Quartile 3</th>';
-    foreach ( $metrics as $metric ) {
-        $tbody .= '<td>' . netrics_pagespeed_format( $metric, nstats_q3( $array[ $metric ] ), 1 )  . '</td>';
-    }
-    $tbody .= '</tr>';
+        $tbody .= '<tr><th scope="row">Q2/Median</th>';
+        foreach ( $metrics as $metric ) {
+            $tbody .= '<td>' . netrics_pagespeed_format( $metric, nstats_q2( $array[ $metric ] ), 1 )  . '</td>';
+        }
+        $tbody .= '</tr>';
 
-    $tbody .= '<tr><th scope="row">Interquartile Range</th>';
-    foreach ( $metrics as $metric ) {
-        $tbody .= '<td>' . netrics_pagespeed_format( $metric, nstats_iqr( $array[ $metric ] ), 1 )  . '</td>';
-    }
-    $tbody .= '</tr>';
+        $tbody .= '<tr><th scope="row">Quartile 3</th>';
+        foreach ( $metrics as $metric ) {
+            $tbody .= '<td>' . netrics_pagespeed_format( $metric, nstats_q3( $array[ $metric ] ), 1 )  . '</td>';
+        }
+        $tbody .= '</tr>';
 
-    $tbody .= '<tr><th scope="row">Standard Deviation</th>';
-    foreach ( $metrics as $metric ) {
-        $tbody .= '<td>' . netrics_pagespeed_format( $metric, nstats_sd( $array[ $metric ] ), 1 )  . '</td>';
+        $tbody .= '<tr><th scope="row">Interquartile Range</th>';
+        foreach ( $metrics as $metric ) {
+            $tbody .= '<td>' . netrics_pagespeed_format( $metric, nstats_iqr( $array[ $metric ] ), 1 )  . '</td>';
+        }
+        $tbody .= '</tr>';
+
+        $tbody .= '<tr><th scope="row">Standard Deviation</th>';
+        foreach ( $metrics as $metric ) {
+            $tbody .= '<td>' . netrics_pagespeed_format( $metric, nstats_sd( $array[ $metric ] ), 1 )  . '</td>';
+        }
+        $tbody .= '</tr>';
+
+    } else {
+        $tbody .= '<tr><th scope="row">Median</th>';
+        foreach ( $metrics as $metric ) {
+            $tbody .= '<td>' . netrics_pagespeed_format( $metric, nstats_q2( $array[ $metric ] ), 1 )  . '</td>';
+        }
+        $tbody .= '</tr>';
     }
-    $tbody .= '</tr>';
 
     return $tbody;
 }
@@ -314,6 +324,47 @@ function netrics_pagespeed_corr( $array ) {
 </table>
    <?php
 }
+
+/**
+ * Get PageSpeed averages for all articles of a Publication with results.
+ *
+ * @param  int   $post_id  ID of a post.
+ * @return array $pub_ps   Array of PageSpeed averages.
+ */
+function netrics_pagespeed_avgs( $post_id, $date = '2019-07' ) {
+    $data    = get_post_meta( $post_id, 'nn_articles', true);
+    $items   = $data[ $date ];
+    $site_ps = array();
+
+    if ( ! $items || ! isset( $items[0]['pagespeed'] ) ) {
+        return $site_ps;
+    }
+
+    $pagespeed = wp_list_pluck( $items, 'pagespeed' );
+    $errors    = wp_list_pluck( $pagespeed, 'error' );
+
+    if ( ! in_array( 0, $errors) ) { // Proceed only if results (i.e, no error = 0).
+        return $site_ps;
+    }
+
+    foreach ( $pagespeed as $key => $result ) { // Remove item if no results (error > 0).
+        if ( $result['error'] ) {
+            unset( $pagespeed[$key] );
+        }
+    }
+
+    // PageSpeed data.
+    $site_ps['score']    = nstats_mean( wp_list_pluck( $pagespeed, 'score' ) );
+    $site_ps['speed']    = nstats_mean( wp_list_pluck( $pagespeed, 'speed' ) );
+    $site_ps['tti']      = nstats_mean( wp_list_pluck( $pagespeed, 'tti' ) );
+    $site_ps['size']     = nstats_mean( wp_list_pluck( $pagespeed, 'size' ) );
+    $site_ps['requests'] = nstats_mean( wp_list_pluck( $pagespeed, 'requests' ) );
+    $site_ps['dom']      = nstats_mean( wp_list_pluck( $pagespeed, 'dom' ) );
+    $site_ps['results']  = count( $pagespeed ); // Number of articles with results.
+
+    return $site_ps;
+}
+
 
 /**
  * Get PageSpeed averages for all articles of a Publication with results.

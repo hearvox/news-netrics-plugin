@@ -47,7 +47,7 @@ if ( defined( 'NEWSNETRICS_VERSION' ) ) {
  * NEWSNETRICS_DIR      /path/to/wp-content/plugins/news-netrics-master/
  * NEWSNETRICS_URL      https://example.com/wp-content/plugins/news-netrics-master/
  * ------------------------------------------------------------------------ */
-define( 'NEWSNETRICS_VERSION', '0.1.0' );
+define( 'NEWSNETRICS_VERSION', '0.1.1' );
 define( 'NEWSNETRICS_BASENAME', plugin_basename( __FILE__ ) );
 define( 'NEWSNETRICS_DIR', trailingslashit( plugin_dir_path( __FILE__ ) ) );
 define( 'NEWSNETRICS_URL', trailingslashit( plugin_dir_url( __FILE__ ) ) );
@@ -56,12 +56,12 @@ define( 'NEWSNETRICS_URL', trailingslashit( plugin_dir_url( __FILE__ ) ) );
  * Adds "Settings" link on plugin page (next to "Activate").
  */
 //
-function newsnetrics_plugin_settings_link( $links ) {
+function netrics_plugin_settings_link( $links ) {
   $settings_link = '<a href="' . esc_url( admin_url( 'options-general.php?page=newsnetrics' ) ) . '">' . __( 'Settings', 'newsnetrics' ) . '</a>';
   array_unshift( $links, $settings_link );
   return $links;
 }
-add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), 'NEWSNETRICS_plugin_settings_link' );
+add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), 'netrics_plugin_settings_link' );
 
 /**
  * Redirect to Settings screen upon plugin activation.
@@ -69,7 +69,7 @@ add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), 'NEWSNETRICS_p
  * @param  string $plugin Plugin basename (e.g., "my-plugin/my-plugin.php")
  * @return void
  */
-function newsnetrics_activation_redirect( $plugin ) {
+function netrics_activation_redirect( $plugin ) {
     if ( $plugin === NEWSNETRICS_BASENAME ) {
         $redirect_uri = add_query_arg(
             array(
@@ -80,36 +80,37 @@ function newsnetrics_activation_redirect( $plugin ) {
         exit;
     }
 }
-add_action( 'activated_plugin', 'NEWSNETRICS_activation_redirect' );
+add_action( 'activated_plugin', 'netrics_activation_redirect' );
 
 /**
  * Load the plugin text domain for translation.
  *
  * @since   0.1.0
  */
-function newsnetrics_load_textdomain() {
+function netrics_load_textdomain() {
     load_plugin_textdomain( 'newsnetrics', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
 }
-add_action( 'plugins_loaded', 'newsnetrics_load_textdomain' );
+add_action( 'plugins_loaded', 'netrics_load_textdomain' );
 
 /**
  * Sets default settings option upon activation, if options doesn't exist.
  *
  * @uses NEWSNETRICS_get_options()   Safely get site option, check plugin version.
  */
-function newsnetrics_activate() {
+function netrics_activate() {
     newsnetrics_get_options();
 }
-register_activation_hook( __FILE__, 'newsnetrics_activate' );
+register_activation_hook( __FILE__, 'netrics_activate' );
 
 /**
  * The code that runs during plugin deactivation (not currently used).
  */
 /*
-function NEWSNETRICS_deactivate() {
+function netrics_deactivate() {
 }
-register_deactivation_hook( __FILE__, 'NEWSNETRICS_deactivate' );
+register_deactivation_hook( __FILE__, 'netrics_deactivate' );
 */
+
 
 /* ------------------------------------------------------------------------ *
  * Required Plugin Files

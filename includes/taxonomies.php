@@ -330,12 +330,12 @@ function netrics_add_sortable_admin_columns( $columns ) {
  */
 function netrics_get_region_data( $set = 1, $page_id = 7594 ) {
     $state_data   = array();
-    $args_regions = array(
+    $args_region  = array(
         'taxonomy'    => 'region',
         'hide_empty'  => false,
         'pad_counts'  => 1,
     );
-    $terms_region = get_terms( $args_regions );
+    $terms_region = get_terms( $args_region );
     $terms_state  = wp_list_filter( $terms_region, array( 'parent' => 0 ) );
 
     // Sort by 'count' number.
@@ -423,7 +423,7 @@ function netrics_get_region_data( $set = 1, $page_id = 7594 ) {
 /**
  * Get data for all Counties (Region taxonomy term parent = State).
  *
- * Date includes Population, total Circulation.
+ * Data includes Population, total Circulation.
  *
  * Save as post meta in 'region' Page (ID: 7594):
  * https://news.pubmedia.us/region/
@@ -438,13 +438,13 @@ function netrics_get_region_data( $set = 1, $page_id = 7594 ) {
 function netrics_get_county_data( $set = 1, $page_id = 7594 ) {
     $terms_county = array();
     $county_data  = array();
-    $args_regions = array(
+    $args_region  = array(
         'taxonomy'    => 'region',
         'hide_empty'  => false,
         'pad_counts'  => 1,
     );
     // $terms_region = get_terms( $args_regions );
-    $terms_region = new WP_Term_Query( $args_regions );
+    $terms_region = new WP_Term_Query( $args_region );
     $terms_state  = wp_list_filter( $terms_region->terms, array( 'parent' => 0 ) );
 
     foreach ($terms_state as $key => $state ) {
@@ -555,12 +555,19 @@ Array
 */
 
 
-    $file_path   = '/home/wp_wugkzz/news.pubmedia.us/wp-content/plugins/news-netrics/import/us-census-2018-county.json';
+    $file_path   = '/home/wp_wugkzz/news.pubmedia.us/tests/geo/data/us-census-2018-county.js';
     $county_data = get_post_meta( 7594, 'nn_counties', true );
 
     // Remove problem counties.
     $key_1 = array_search( 1564, array_column( $county_data, 'term_id') ); // Kusilvak Census Area, Alaska.
     $key_2 = array_search( 3894, array_column( $county_data, 'term_id') ); // Oglala Lakota County, South Dakota.
+
+/*
+1564 "GEO_ID": "0500000US02270", "STATE": "02", "COUNTY": "270", "NAME": "Wade Hampton", "LSAD": "CA"
+3894 "GEO_ID": "0500000US46113", "STATE": "46", "COUNTY": "113", "NAME": "Shannon", "LSAD": "County"
+
+*/
+
     unset( $county_data[ $key_1 ], $county_data[ $key_2 ] );
 /*
             $circ_per_pop = ( $circ_sum ) ? $circ_sum / $population : 0; // Circ./Pop.
@@ -586,7 +593,7 @@ Array
             'slug'         =>  esc_attr( $data['slug'] ),
             'term_id'      =>  absint( $data['term_id'] ),
             'parent'       =>  absint( $data['parent'] ),
-            'state'        =>  esc_attr( $data['parent'] ),
+            'state'        =>  esc_attr( $state->name ),
         );
 
         $json .= '["' . implode( '","', $columns ) . "\"],\n";
@@ -600,6 +607,78 @@ Array
     return $write_data;
 }
 
+/**
+ * Get data for all Cities (childless Region taxonomy term = City).
+ *
+ * Data includes Population, total Circulation.
+ *
+ * Save as post meta in 'region' Page (ID: 7594):
+ * https://news.pubmedia.us/region/
+ *
+ * @since   0.1.0
+ *
+ * @param bool $set      Save data in post meta.
+ * @param int  $post_id  Default Post ID of Page for post meta.
+ *
+ * @return array $county_data Array of data for all Region: States > Counties.
+ */
+function netrics_get_city_data( $set = 1, $page_id = 7594 ) {
+    $terms_city  = array();
+    $city_data   = array();
+    $args_region = array(
+        'taxonomy'    => 'region',
+        'childless'    => true,
+    );
+    $terms_region = new WP_Term_Query( $args_region );
+
+    foreach ($terms_region->terms as $city ) {
+        $city_id = $city->term_id;
+
+        // Papers in county.
+        $args_city = array(
+            'post_type'      => 'publication',
+            'posts_per_page' => 100,
+            'fields'         => 'ids',
+            'tax_query'      => array(
+                array(
+                    'taxonomy' => 'region',
+                    'field'    => 'id',
+                    'terms'    => $city_id,
+                )
+            )
+        );
+        $city_pubs = new WP_Query( $args_city );
+
+        // Sum Circulation for all county papers.
+        $circ_sum = 0;
+        foreach ( $city_pubs->posts as $post_id ) {
+            $circ_sum += get_post_meta( $post_id, 'nn_circ', true );
+        }
+        wp_reset_postdata();
+
+        $parents = get_ancestors( $city_id, 'region', 'taxonomy' );
+        $state   = get_term( end( $parents ) );
+
+        // Census and other data for County.
+        $data = array(
+            'geoid'          => get_term_meta( $city_id, 'nn_region_geoid', true ),
+            'population'     => get_term_meta( $city_id, 'nn_region_pop', true ),
+            'pop_density'    => get_term_meta( $city_id, 'nn_region_density', true ),
+            'circ_sum'       => $circ_sum,
+            'state'          => $state->name,
+        );
+
+        $city = array_merge( (array)$city, $data );
+        $city_data[]  = $city; // Add city data to array.
+    }
+
+    if ( $set ) {
+        $meta = update_post_meta( $page_id, 'nn_cities', $city_data );
+        return $meta;
+    }
+
+    return $city_data;
+}
 
 /**
  * Get terms for all States (Region taxonomy term parent = 0).
@@ -636,7 +715,32 @@ function netrics_get_state_totals( $state_data = array() ) {
     return $usa_totals;
 }
 
+/**
+ * Get terms for all counties.
+ *
+ *
+ * @since   0.1.0
+ *
+ * @return array $state_data Array of term objects for all Region: Counties.
+ */
+function netrics_get_all_county_terms() {
+    $terms_county = array();
+    $args_regions = array(
+        'taxonomy'    => 'region',
+        'hide_empty'  => false,
+        'pad_counts'  => 1,
+    );
+    $terms_region = new WP_Term_Query( $args_regions );
+    $terms_state  = wp_list_filter( $terms_region->terms, array( 'parent' => 0 ) );
 
+    foreach ($terms_state as $key => $state ) {
+        // Counties in each state.
+        $terms        = wp_list_filter( $terms_region->terms, array( 'parent' => $state->term_id ) );
+        $terms_county = array_merge( $terms_county, $terms  );
+    }
+
+    return $terms_county;
+}
 
 /**
  * Get terms for all States (Region taxonomy term parent = 0).
@@ -644,13 +748,13 @@ function netrics_get_state_totals( $state_data = array() ) {
  *
  * @since   0.1.0
  *
- * @return array $state_data Array of data for all Region: States.
+ * @return array $state_data Array of term objects for all Region: States.
  */
 function netrics_get_state_terms() {
-        $args_regions = array(
-        'taxonomy'    => 'region',
-        'hide_empty'  => false,
-        'pad_counts'  => 1,
+    $args_regions = array(
+    'taxonomy'    => 'region',
+    'hide_empty'  => false,
+    'pad_counts'  => 1,
     );
     $terms_region = get_terms( $args_regions );
     $terms_state  = wp_list_filter( $terms_region, array( 'parent' => 0 ) );

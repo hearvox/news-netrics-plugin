@@ -1,23 +1,10 @@
 <?php
-/*
-// Use as URL:
-https://news.pubmedia.us/wp-content/plugins/news-netrics/api/awis-query-php/urlinfo.php?site=
+// For testing AWIS keys with an URL:
+// /includes/api/awis-urlinfo.php?k1=&k2=&site=
+$accessKeyId = $_GET['k1'];
+$secretAccessKey = $_GET['k2'];
+$site = $_GET['site'];
 
-https://news.pubmedia.us/wp-content/plugins/news-netrics/api/awis-query-php/urlinfo.php?site=ocregister.com
-
-// Use as code, without URL:
-include_once( WP_PLUGIN_DIR . '/news-netrics/api/alexa.php' );
-
-$accessKeyId     = 'AKIAJBV4OWGCGHDIL3PQ';
-$secretAccessKey = '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';
-$site            = 'ocregister.com';
-
-$urlInfo = new UrlInfo( $accessKeyId, $secretAccessKey, $site );
-$xml     = $urlInfo->getUrlInfo();
-
-print_r( $xml );
-
-*/
 
 /**
  * Makes a request to AWIS for site info.
@@ -25,16 +12,17 @@ print_r( $xml );
 class UrlInfo {
 
     protected static $ActionName        = 'UrlInfo';
-    protected static $ResponseGroupName = 'Rank,RankByCountry,LinksInCount,Speed,SiteData,ContactInfo';
-    protected static $ServiceHost       = 'awis.amazonaws.com';
-    protected static $ServiceEndpoint   = 'awis.us-west-1.amazonaws.com';
+    // protected static $ResponseGroupName = 'Rank,ContactInfo,LinksInCount';
+    protected static $ResponseGroupName = 'Rank,RankByCountry,UsageStats,LinksInCount,Speed,Categories,OwnedDomains,SiteData,ContactInfo';
+    protected static $ServiceHost      = 'awis.amazonaws.com';
+    protected static $ServiceEndpoint  = 'awis.us-west-1.amazonaws.com';
     protected static $NumReturn         = 10;
     protected static $StartNum          = 1;
     protected static $SigVersion        = '2';
     protected static $HashAlgorithm     = 'HmacSHA256';
-    protected static $ServiceURI        = "/api";
-    protected static $ServiceRegion     = "us-west-1";
-    protected static $ServiceName       = "awis";
+    protected static $ServiceURI = "/api";
+    protected static $ServiceRegion = "us-west-1";
+    protected static $ServiceName = "awis";
 
     public function UrlInfo($accessKeyId, $secretAccessKey, $site) {
         $this->accessKeyId = $accessKeyId;
@@ -64,11 +52,9 @@ class UrlInfo {
 
         $url = 'https://' . self::$ServiceHost . self::$ServiceURI . '?' . $canonicalQuery;
         $ret = self::makeRequest($url, $authorizationHeader);
-        // echo "\nResults for " . $this->site .":\n\n";
-        // echo $ret;
-        $nn_data = self::parseResponse($ret);
-
-        return $nn_data;
+        echo "\nResults for " . $this->site .":\n\n";
+        echo $ret;
+        self::parseResponse($ret);
     }
 
     protected function sign($key, $msg) {
@@ -134,7 +120,7 @@ class UrlInfo {
      * @return String       Result of request
      */
     protected function makeRequest($url, $authorizationHeader) {
-        // echo "\nMaking request to:\n$url\n";
+        echo "\nMaking request to:\n$url\n";
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_TIMEOUT, 4);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
@@ -157,48 +143,21 @@ class UrlInfo {
         $xml = new SimpleXMLElement($response,LIBXML_ERR_ERROR,false,'http://awis.amazonaws.com/doc/2005-07-11');
         if($xml->count() && $xml->Response->UrlInfoResult->Alexa->count()) {
             $info = $xml->Response->UrlInfoResult->Alexa;
-
-            $nn_alexa_arr = array(
-                'rank'     => $info->TrafficData->Rank,
-                // 'rank_us'  => $info->TrafficData->RankByCountry->Country[0]->Rank,
-                'title'    => $info->ContentData->SiteData->Title,
-                'desc'     => $info->ContentData->SiteData->Description,
-                'since'    => $info->ContentData->SiteData->OnlineSince,
-                'links'    => $info->ContentData->LinksInCount,
-                'speed'    => $info->ContentData->Speed->MedianLoadTime,
-                'speed_pc' => $info->ContentData->Speed->Percentile,
-                'date'     => date( 'Y-m' ),
-                'error'    => 0,
+            $nice_array = array(
+                'Links In Count' => $info->ContentData->LinksInCount,
+                'Rank'           => $info->TrafficData->Rank
             );
         }
-
-        $nn_alexa = array();
-        foreach($nn_alexa_arr as $key => $value) {
-            $nn_alexa[$key] = (string) $value;
+        foreach($nice_array as $k => $v) {
+            echo $k . ': ' . $v ."\n";
         }
-
-        return $nn_alexa;
-
     }
 
 }
 
-/*
-Array
-(
-    [rank] => 74977
-    [title] => Albuquerque Journal - ABQJournal
-    [desc] => Provides New Mexico news and sports.
-    [since] => 03-Feb-1996
-    [links] => 2273
-    [speed] => 2867
-    [speed_pc] => 26
-    [date] => 201906
-)
-
 // Commented out by BG 2019-02
 if (count($argv) < 4) {
-    // echo "Usage: $argv[0] ACCESS_KEY_ID SECRET_ACCESS_KEY site $site\n";
+    echo "Usage: $argv[0] ACCESS_KEY_ID SECRET_ACCESS_KEY site $site\n";
     // exit(-1);
 }
 else {
@@ -206,4 +165,8 @@ else {
     // $secretAccessKey = $argv[2];
     // $site = $argv[3];
 }
-*/
+
+$urlInfo = new UrlInfo($accessKeyId, $secretAccessKey, $site);
+$urlInfo->getUrlInfo();
+
+?>

@@ -3,7 +3,7 @@
  * General functions for reading and writing plugin settings.
  *
  * @link    http://hearingvoices.com/tools/
- * @since   0.1.0
+ * @since   0.1.1
  *
  * @package    News Netrics
  * @subpackage news-netrics/includes
@@ -21,15 +21,15 @@
  *
  * @since   0.1.0
  *
- * @uses    newsnetrics_upgrade_options()
+ * @uses    netrics_upgrade_options()
  * @return  array   $options    Array of plugin settings
  */
-function newsnetrics_get_options() {
-    $options = get_option( 'ssppod' );
+function netrics_get_options() {
+    $options = get_option( 'newsnetrics' );
 
     // Set version if not the latest.
     if ( ! isset( $options['version'] ) || $options['version'] < NEWSNETRICS_VERSION ) {
-        $options = newsnetrics_upgrade_options( $options );
+        $options = netrics_upgrade_options( $options );
     }
 
     return $options;
@@ -40,16 +40,18 @@ function newsnetrics_get_options() {
  *
  * @since   0.1.0
  *
- * @uses    newsnetrics_set_options()
+ * @uses    netrics_set_options()
  * @param   array   $options        Array of plugin settings
  * @return  array   $new_options    Merged array of plugin settings
  */
-function newsnetrics_upgrade_options( $options ) {
+function netrics_upgrade_options( $options ) {
     $defaults = array(
-        'feed_pull_url'  => '',
-        'feed_push_url'  => '',
-        'feed_push_path' => '',
-        'feed_tags_url'  => NEWSNETRICS_URL . 'xml/template-tags.xml',
+        'awis'           => '',
+        'awissecret'     => '',
+        'gmaps'          => '',
+        'psi'            => '',
+        'veracity'       => '',
+        'veracitysecret' => '',
     );
 
     if ( is_array( $options ) && ! empty( $options ) ) {
@@ -60,10 +62,22 @@ function newsnetrics_upgrade_options( $options ) {
 
     $new_options['version'] = NEWSNETRICS_VERSION;
 
-    newsnetrics_set_options( $new_options );
+    netrics_set_options( $new_options );
 
     return $new_options;
 }
+
+/*
+Array
+(
+    [awis] => {KEY}
+    [awissecret] => {KEY}
+    [gmaps] => {KEY}
+    [psi] => {KEY}
+    [veracity] => {KEY}
+    [version] => {vers#}
+)
+*/
 
 /**
  * Sets an option in database (an array of plugin settings).
@@ -74,9 +88,9 @@ function newsnetrics_upgrade_options( $options ) {
  *
  * @param   array   $option     Array of plugin settings
  */
-function newsnetrics_set_options( $options ) {
-    $options_clean = newsnetrics_sanitize_data( $options );
-    update_option( 'ssppod', $options_clean );
+function netrics_set_options( $options ) {
+    $options_clean = netrics_sanitize_data( $options );
+    update_option( 'newsnetrics', $options_clean );
 }
 
 /* ------------------------------------------------------------------------ *
@@ -88,12 +102,12 @@ function newsnetrics_set_options( $options ) {
  *
  * @since   0.1.0
  *
- * @uses    newsnetrics_get_options()
+ * @uses    netrics_get_options()
  * @param   array|string    $option     Array item key
  * @return  array           $option_key Array item value
  */
-function newsnetrics_get_option( $option_key = NULL ) {
-    $options = newsnetrics_get_options();
+function netrics_get_option( $option_key = NULL ) {
+    $options = netrics_get_options();
 
     // Returns valid inner array key ($options[$option_key]).
     if ( isset( $options ) && $option_key != NULL && isset( $options[ $option_key ] ) ) {
@@ -108,18 +122,18 @@ function newsnetrics_get_option( $option_key = NULL ) {
  *
  * @since   0.1.0
  *
- * @uses    newsnetrics_set_options()
+ * @uses    netrics_set_options()
  *
  * @param   string  $option     Array item key of specified setting
  * @param   string  $value      Array item value of specified setting
  * @return  array   $options    Array of plugin settings
  */
-function newsnetrics_set_option( $option, $value ) {
-    $options = newsnetrics_get_options();
+function netrics_set_option( $option, $value ) {
+    $options = netrics_get_options();
 
     $options[$option] = $value;
 
-    newsnetrics_set_options( $options );
+    netrics_set_options( $options );
 }
 
 /**
@@ -135,7 +149,7 @@ function newsnetrics_set_option( $option, $value ) {
  * @param    array    $input        The address input.
  * @return   array    $input_clean  The sanitized input.
  */
-function newsnetrics_sanitize_data( $data = array() ) {
+function netrics_sanitize_data( $data = array() ) {
     // Initialize a new array to hold the sanitized values.
     $data_clean = array();
 
@@ -156,7 +170,7 @@ function newsnetrics_sanitize_data( $data = array() ) {
 
         // For multidimensional array.
         if ( is_array( $value ) ) {
-            $data_clean[ $key ] = newsnetrics_sanitize_data( $value );
+            $data_clean[ $key ] = netrics_sanitize_data( $value );
         }
     }
 
@@ -174,7 +188,7 @@ function newsnetrics_sanitize_data( $data = array() ) {
  * @param    array    $input        The address input.
  * @return   array    $input_clean  The sanitized input.
  */
-function newsnetrics_sanitize_array( $input ) {
+function netrics_sanitize_array( $input ) {
     // Initialize a new array to hold the sanitized values.
     $input_clean = array();
 
@@ -186,12 +200,12 @@ function newsnetrics_sanitize_array( $input ) {
     return $input_clean;
 }
 
-function newsnetrics_remove_empty_lines( $string ) {
+function netrics_remove_empty_lines( $string ) {
     return preg_replace( "/(^[\r\n]*|[\r\n]+)[\s\t]*[\r\n]+/", "\n", $string );
     // preg_replace( '/^\h*\v+/m', '', $string );
 }
 
-function newsnetrics_object_to_array($d) {
+function netrics_object_to_array($d) {
         if (is_object($d))
             $d = get_object_vars($d);
 
@@ -211,7 +225,7 @@ function newsnetrics_object_to_array($d) {
  * @param  $url         URL to be checked.
  * @return int|string   URL Sstatus repsonse code number, or WP error on failure.
  */
-function newsnetrics_url_exists( $url = '' ) {
+function netrics_url_exists( $url = '' ) {
     // Make absolute URLs for WP core scripts (from their registered relative 'src' URLs)
     if ( substr( $url, 0, 13 ) === '/wp-includes/' || substr( $url, 0, 10 ) === '/wp-admin/' ) {
         $url = get_bloginfo( 'wpurl' ) . $url;
@@ -222,8 +236,8 @@ function newsnetrics_url_exists( $url = '' ) {
         $url = 'https:' . $url;
     }
 
-    if ( has_filter( 'newsnetrics_url_exists' ) ) {
-        $url = apply_filters( 'newsnetrics_url_exists', $url );
+    if ( has_filter( 'netrics_url_exists' ) ) {
+        $url = apply_filters( 'netrics_url_exists', $url );
     }
 
     // Sanitize
@@ -267,3 +281,18 @@ function yono( $val ) {
     $yono = ( $val ) ? 'yo' : 'no';
     return $yono;
 }
+
+
+function netrics_get_csv_data( $csv ) {
+    // home/wp_wugkzz/news.pubmedia.us/wp-content/plugins/news-netrics/import/us-census-2018-county-wp.csv
+    echo $exists = ( file_exists( $csv ) ) ? $csv . "\n" : "N'existe pas.\n";
+    $csv_array = array();
+    if ( ( $handle = fopen( $csv, 'r' ) ) !== FALSE ) {
+        $csv_array = array_map( 'str_getcsv', file( $csv ) );
+        fclose($handle);
+    } else {
+        echo 'Did not open.';
+    }
+    return $csv_array;
+}
+

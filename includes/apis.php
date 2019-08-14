@@ -1,6 +1,6 @@
 <?php
 /**
- * Get data from APIs, performance tests, domian info, etc..
+ * Get data from APIs, performance tests, domain info, etc..
  *
  * @since   0.1.0
  *
@@ -79,6 +79,7 @@ function netrics_error( $post_id, $error ) {
 
     add_post_meta( $post_id, 'nn_error', $error . date( '-Y.m' ), false );
 }
+
 /* ------------------------------------------------------------------------ *
  * cURL (get data from remote sites)
  * ------------------------------------------------------------------------ */
@@ -154,58 +155,28 @@ function newsstats_curl( $url ) {
 } // end curl
 
 /* ------------------------------------------------------------------------ *
- * Google PageSpeed (with Lighthouse)
+ * Publication (CPT)
  * ------------------------------------------------------------------------ */
-/** Get
+/**
+ * Get all CPT posts (Publication).
  *
  * @since   0.1.0
  *
- * @param int $query   Array of Post IDs.
- * @return string $url Post meta value
+ * @param  int    $per_page  The number of post to return.
+ * @param  int    $offset    The starting point in array.
+ * @return array  $query     Array of WP Post objects.
  */
-function netrics_get_pubs_pagespeed( $query, $strategy = 'mobile'  ) {
-    if ( ! isset( $query->posts ) ) {
-        $query = netrics_get_pubs_ids();
-    }
+function netrics_get_pub_posts( $per_page = 100, $offset = 0 ) {
+    $args = array(
+        'post_type' => 'publication',
+        'orderby'   => 'title',
+        'order'     => 'ASC',
+        'posts_per_page' => $per_page,
+        'offset'         => $offset,
+    );
+    $query = new WP_Query( $args );
 
-    foreach ( $query->posts as $post_id ) {
-        echo "ID: $post_id\nURL: ";
-        $terms = '';
-        $items = netrics_get_pub_items( $post_id ); // Get articles.
-        // print_r( $items );
-
-        if ( is_wp_error( $items ) ) { // No articles.
-            continue;
-        }
-
-        foreach ( $items as $key => $item ) { // Get PageSpeed results for articles.
-            // print_r( $item );
-
-            // Skip if URL already successfully retrieved PSI results ('error' > 0).
-            if ( isset( $item['error'] ) && $item['error'] ) {
-                continue;
-            }
-
-            // Run PSI.
-            if ( isset( $item['url'] ) && wp_http_validate_url( $item['url'] ) ) {
-                echo $item['url'] . "\n";
-                $pagespeed = netrics_get_pagespeed( $item['url'], $strategy ); // Run PageSpeed test.
-                print_r( $pagespeed );
-            }
-
-            // Store PSI results in post meta.
-            if ( $pagespeed ) { // Unsuccessful remote request.
-                $terms = netrics_save_pagespeed( $post_id, $pagespeed, $key );
-                print_r( $terms );
-            } else {
-                // return new WP_Error( 'pagespeed', __( "No PageSpeed results." ), $post_id );
-            }
-
-            sleep( 1 ); // Works better with a pause.
-
-            // return $terms;
-        }
-    }
+    return $query ;
 }
 
 /**
@@ -227,178 +198,6 @@ function netrics_get_pub_items( $post_id, $meta_key = 'nn_articles_201907' ) {
 }
 
 /**
- * Run Pagespeed Insights test for URL then return results.
- *
- * @since   0.1.0
- *
- * @param int $post_id Post ID.
- * @return string $url Post meta value
- */
-function netrics_get_pagespeed( $url, $strategy = 'mobile' ) {
-    $json = '';
-    $data = $pagespeed = array();
-
-    // Construct API call URL.
-    $api_url = 'https://www.googleapis.com/pagespeedonline/v5/runPagespeed';
-    $fields  = 'analysisUTCTimestamp%2ClighthouseResult(audits%2Ccategories%2Fperformance%2Fscore)';
-    $api_key = 'AIzaSyDFM3aDEdbfRIMMQQRhPDmF25A01dENS70';
-    $api     = $api_url . '?strategy=' . $strategy . '&fields=' . $fields . '&key=' . $api_key . '&url=';
-
-    // Make API call to run PageSpeed test.
-    $json = newsstats_request_data( $api . urlencode( $url ), 60 );
-    if ( $json ) {
-        $data = json_decode( $json );
-
-        // Make array of test results from JSON.
-        if ( isset( $data->lighthouseResult ) ) {
-            $audits    = $data->lighthouseResult->audits;
-            $pagespeed = array(
-                // 'bytes'    => $audits->diagnostics->details->items[0]->totalByteWeight,
-                'date'     => date( 'Y-m' ),
-                'dom'      => str_replace( ',', '', $audits->{"dom-size"}->details->items[0]->value ),
-                'requests' => $audits->{"resource-summary"}->details->items[0]->requestCount,
-                'size'     => $audits->{"resource-summary"}->details->items[0]->size,
-                'speed'    => $audits->metrics->details->items[0]->speedIndex,
-                'tti'      => $audits->metrics->details->items[0]->interactive,
-                'score'    => $data->lighthouseResult->categories->performance->score,
-                'time'     => $data->analysisUTCTimestamp,
-                'error'    => 0,
-            );
-
-        } else { // No Lighthouse data returned.
-            $pagespeed['error'] = 1;
-        }
-
-    } else { // No JSON returned from remote request.
-       $pagespeed['error'] = 2;
-    }
-
-    return $pagespeed;
-}
-
-/**
- * Get
- *
- * @since   0.1.0
- *
- * @param int $post_id Post ID.
- * @return string $url Post meta value
- */
-function netrics_save_pagespeed( $post_id, $pagespeed, $key = 0, $term_id = 6222 ) {
-    if ( $pagespeed ) {
-        $items = get_post_meta( $post_id, 'nn_articles_201907', true );
-        $items[$key]['pagespeed'] = $pagespeed; // Save results as array in post_meta.
-        update_post_meta( $post_id, 'nn_articles_201907', $items );
-        $terms = wp_set_post_terms( $post_id, array( $term_id ), 'flag', true ); // Flag success.
-    } else {
-        $terms = wp_set_post_terms( $post_id, '1907redo' . $key, 'post_tag', true ); // Flag error.
-    }
-
-    return $terms;
-}
-
-/**
- * Get article item URLs.
- *
- * @since   0.1.0
- *
- * @param int $post_id Post ID.
- * @return string $url Post meta value
- */
-function netrics_validate_url( $url ) {
-    if ( wp_http_validate_url( $url ) ) {
-        return $url;
-    } else {
-        return new WP_Error( 'url_invalid', __( "URL does not validate." ) );
-    }
-}
-
-/*
-Array
-(
-    [0] => Array
-        (
-            [url] => https://www.abqjournal.com/1320964/tornados-leave-trail-of-destruction-across-ohio-indiana.html
-            [title] => Tornadoes carve a path through Ohio and Indiana; 1 killed - Albuquerque Journal
-            [pagespeed] => Array
-                (
-                    [bytes] => 2426022
-                    [dom] => 872
-                    [requests] => 196
-                    [size] => 2426022
-                    [speed] => 25402
-                    [tti] => 19438
-                    [score] => 0.26
-                    [time] => 2019-06-02T22:27:49.942Z
-                    [error] => 0
-                    [date] => 2019-05
-                )
-
-        )
-
-    [1] => Array
-        (
-            [url] => https://www.abqjournal.com/1320967/knife-wielding-man-attacks-schoolgirls-in-japan-killing-2.html
-            [title] => Knife-wielding man attacks schoolgirls in Japan, killing 2 - Albuquerque Journal
-            [pagespeed] => Array
-                (
-                    [error] => 2
-                )
-
-        )
-
-    [2] => Array
-        (
-            [url] => https://www.abqjournal.com/1320869/trump-ending-japan-trip-after-memorial-day-speech-to-troops.html
-            [title] => Trump wishes ‘happy Memorial Day’ to US, Japanese troops - Albuquerque Journal
-            [pagespeed] => Array
-                (
-                    [error] => 1
-                )
-
-        )
-
-)
-
-*/
-
-/* ------------------------------------------------------------------------ *
- * Set tax terms
- * ------------------------------------------------------------------------ */
-function newsstats_set_terms( $post ) {
-    $post_id = $post->ID;
-    $term_ids = '';
-    $rss      = get_post_meta( $post_id, 'nn_pub_rss', true ); // RSS file
-
-    if ( has_term( '201906', 'flag', $post_id ) ) { // Check for: '201905'.
-
-        // wp_remove_object_terms( $post_id, 'check', 'flag' ); // Remove: 'check'.
-
-    } else {
-
-        // wp_remove_object_terms( $post_id, 6170, 'flag' ); // Remove: 'feed'.
-        // $term_ids = wp_set_post_terms( $post_id, array( 6175 ), 'flag', true ); // Add: 'none'.
-
-    }
-
-    return $term_ids;
-}
-/**
- * Tax 'flag' terms (ID):
- * 'feed' (6170)
- *     'xml' (6171)
- *     json' (6172)
- *     'none' (6175)
- *     'fail' (6176)
- * 'articles' (6177)
- *     '201905' (6178)
- *     'check' (6179)
- */
-
-/* ------------------------------------------------------------------------ *
- * Alexa Web Information Service (Amazon)
- * ------------------------------------------------------------------------ */
-/**
  * Get all CPT posts (Publication).
  *
  * @since   0.1.0
@@ -418,306 +217,226 @@ function newsstats_get_pub_posts( $per_page = 100, $offset = 0 ) {
     $query = new WP_Query( $args );
 
     return $query ;
-
 }
 
-/** Get
+/**
+ * Check URL syntax.
  *
  * @since   0.1.0
  *
  * @param int $post_id Post ID.
  * @return string $url Post meta value
  */
-function newsstats_api_calls( $query, $api = 'awis' ) {
+function netrics_validate_url( $url ) {
+    if ( wp_http_validate_url( $url ) ) {
+        return $url;
+    } else {
+        return new WP_Error( 'url_invalid', __( "URL does not validate." ) );
+    }
+}
+
+/* ------------------------------------------------------------------------ *
+ * API Calls
+ * ------------------------------------------------------------------------ */
+/**
+ * Make API calls for domain data; store in post meta.
+ *
+ * @since   0.1.0
+ *
+ * @param int    $post_id  Post ID (required).
+ * @param string $api      API service (AWIS or BuiltWith).
+ * @param string $api_key  API key required for BuiltWith.
+ *
+ * @return void
+ */
+function netrics_api_calls( $query, $api = 'awis', $api_key = '' ) {
     if ( ! isset( $query->posts ) ) {
         $query = newsstats_get_pub_posts();
     }
 
     switch ( $api ) {
-        case 'awis': // Alexa Web Information Service (Amazon)
+        case 'awis': // Alexa Web Information Service (Amazon).
+            require_once( plugin_dir_path( __FILE__ ) . 'api/awis.php' );
             foreach ( $query->posts as $post ) {
-                newsstats_save_alexa_data( $post );
+                netrics_api_save_awis( $post );
             }
             break;
         case 'bw': // BuiltWith
+            require_once( plugin_dir_path( __FILE__ ) . 'api/builtwith.php' );
             foreach ( $query->posts as $post ) {
-                newsstats_save_bw_data( $post );
+                netrics_api_save_builtwith( $post, $api_key );
             }
             break;
         default:
             break;
     }
+}
 
+/* ------------------------------------------------------------------------ *
+ * PageSpeed Insights (with Lighthouse)
+ * ------------------------------------------------------------------------ */
+/**
+ * Get PSI performance results for an URL via API call.
+ *
+ * @since   0.1.1
+ *
+ * @todo Log data to file.
+ *
+ * @param  int  $post_id Post ID.
+ * @return array  $alexa  Data from Alexa.
+ */
+function netrics_api_call_pagespeed_url( $url, $strategy = 'mobile' ) {
+    // PSI file with API call.
+    require_once( plugin_dir_path( __FILE__ ) . 'api/pagespeed.php' );
+
+    $psi_data = netrics_get_pagespeed( $url, $strategy );
+
+    return $psi_data;
+}
+
+/**
+ * Get PSI performance results for Publication articles via API call.
+ *
+ * @since   0.1.1
+ *
+ * @todo Log data to file.
+ *
+ * @param  int  $post_id Post ID.
+ * @return array  $alexa  Data from Alexa.
+ */
+function netrics_api_call_pagespeed( $query_ids, $strategy = 'mobile' ) {
+    // PSI file with API call.
+    require_once( plugin_dir_path( __FILE__ ) . 'api/pagespeed.php' );
+
+    // $query_ids = new WP_Query( array( 'post_type' => 'publication', 'p' => 4030, 'fields' => 'ids' ) );
+
+    $psi_data = netrics_psi_test( $query_ids, $strategy  );
+
+    return $psi_data;
 }
 
 /* ------------------------------------------------------------------------ *
  * Alexa Web Information Service (Amazon) API
  * ------------------------------------------------------------------------ */
 /**
- * Save AWIS data as post meta (array).
+ * Get AWIS data for domain via API call.
  *
- * @see https://docs.aws.amazon.com/awis/index.html
- *
- * @since   0.1.0
- *
- * @param  int   $post     WP Post object.
- * @return array $nn_site  Updated array of site data,
- */
-function newsstats_save_alexa_data( $post ) {
-
-    $post_id = $post->ID;
-    // Returns NN-customized array.
-    $alexa   = newsstats_call_alexa_api( $post_id );
-    // We'll add data to existing post meta or start a new array.
-    $nn_site = ( get_post_meta( $post_id, 'nn_site' ) ) ? get_post_meta( $post_id, 'nn_site', true ) : array();
-
-    // Run Alexa, save data in post_meta, then set term.
-    if ( $alexa ) {
-
-        $nn_site['alexa'] = $alexa;
-        // @todo Don't replace with empty fields, get keys and check via foreach.
-        update_post_meta( $post_id, 'nn_site', $nn_site );
-
-    }
-
-    sleep( 2 ); // Works better with a pause.
-
-    return $nn_site;
-
-}
-
-
-/**
- * Get data from AWIS via API for domain name.
- *
- * @since   0.1.0
+ * @since   0.1.1
  *
  * @todo Log data to file.
  *
  * @param  int  $post_id Post ID.
  * @return array  $alexa  Data from Alexa.
  */
-function newsstats_call_alexa_api( $post_id ) {
-
+function netrics_api_call_awis( $post_id ) {
     // Alexa script (New Netrics customized) and API keys
-    include_once( WP_PLUGIN_DIR . '/news-netrics/api/alexa.php' );
-    $accessKeyId     = 'AKIAJBV4OWGCGHDIL3PQ';
-    $secretAccessKey = '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';
-    $domain          = get_post_meta( $post_id, 'nn_pub_site', true );
-    echo $domain; // @todo Log to file.
+    require_once( plugin_dir_path( __FILE__ ) . 'api/awis.php' );
 
-    if ( $domain ) {
+    $awis = netrics_api_awis( $post_id );
 
-        // Class for Alexa API
-        $urlInfo    = new UrlInfo( $accessKeyId, $secretAccessKey, $domain );
-        $alexa_data = $urlInfo->getUrlInfo();
-
-    }
-
-    // Set return var to false if not an array.
-    $alexa = ( is_array( $alexa_data ) ) ? $alexa_data : false;
-
-    print_r ( $alexa ); // @todo Log to file.
-
-    return $alexa;
-
+    return $awis;
 }
-/*
-Array
-(
-    [rank] => 74977
-    [title] => Albuquerque Journal - ABQJournal
-    [desc] => Provides New Mexico news and sports.
-    [since] => 03-Feb-1996
-    [links] => 2273
-    [speed] => 2867
-    [speed_pc] => 26
-    [date] => 201906
-)
 
-date_parse_from_format ( 'Y-m' , $nn_site[0]['alexa']['date'] );
-date_parse_from_format ( 'd-M-Y' , $nn_site[0]['alexa']['since'] );
-*/
 
 /* ------------------------------------------------------------------------ *
  * BuiltWith: Free API
  * ------------------------------------------------------------------------ */
 /**
- * Save AWIS data as post meta (array).
+ * Get BuiltWith data for domain via API call.
  *
- * Domain API (web tech names and catorgories)
- * @see https://api.builtwith.com/domain-api
- *
- * @since   0.1.0
- *
- * @param  int   $post     WP Post object.
- * @return array $nn_site  Updated array of site data,
- */
-function newsstats_save_bw_data( $post ) {
-
-    $post_id = $post->ID;
-    $bw_data   = newsstats_call_bw_api( $post_id );
-    // We'll add data to existing post meta or start a new array.
-    $nn_site = ( get_post_meta( $post_id, 'nn_site' ) ) ? get_post_meta( $post_id, 'nn_site', true ) : array();
-
-    // Run Alexa, save data in post_meta, then set term.
-    if ( $bw_data ) {
-
-        $nn_site['builtwith'] = $bw_data;
-        update_post_meta( $post_id, 'nn_site', $nn_site );
-
-    }
-
-    sleep( 2 ); // Works better with a pause.
-
-    print_r ( $nn_site );
-
-    return $nn_site;
-
-}
-
-
-/**
- * Get data from AWIS via API for domain name.
- *
- * Domain API (web tech names and categories):
- * https://api.builtwith.com/v12/api.[xml|json]?KEY=[YOUR KEY]&LOOKUP=[DOMAIN]
- * @see https://api.builtwith.com/domain-api
- *
- * Free API (category count only):
- * https://api.builtwith.com/free1/api.json?KEY=[YOUR KEY]&LOOKUP=builtwith.com
- * @see https://api.builtwith.com/free-api
- *
- * @since   0.1.0
+ * @since   0.1.1
  *
  * @todo Log data to file.
  *
  * @param  int  $post_id Post ID.
  * @return array  $alexa  Data from Alexa.
  */
-function newsstats_call_bw_api( $post_id , $api_type = 'free') {
+function netrics_api_call_builtwith( $post_id, $api_key ) {
+    // Alexa script (New Netrics customized) and API keys
+    require_once( plugin_dir_path( __FILE__ ) . 'api/builtwith.php' );
 
-    // BuitWith Free API url and API key.
-    $api     = 'https://api.builtwith.com/free1/api.json';
-    $api_key = 'd0d0d4bd-044f-4a33-bd2f-c28e3a9a1415';
-    $domain  = get_post_meta( $post_id, 'nn_pub_site', true );
-    $api_url = $api . '?KEY=' . $api_key . '&LOOKUP=' . $domain;
-    $bw_json = $bw_data = false;
-    echo $api_url; // @todo Log to file.
-    if ( $domain ) {
-
-        // Make API call and return data with tech-category names and counts.
-        $bw_json = newsstats_request_data( $api_url );
-        $bw_arr  = json_decode( $bw_json );
-        $bw_data  = array();
-        if ( isset( $bw_arr->groups ) ) {
-
-            // Make tech-cat and count into array.
-            foreach ( $bw_arr->groups as $group ) {
-                $bw_data[$group->name] = $group->live;
-            }
-            $bw_data['date']  = date( 'Y-m' );
-            $bw_data['error'] = 0;
-
-        } else { // No BW results.
-
-            $bw_data['error']  = 4001;
-            if ( isset( $bw_arr->Errors[0]->Message ) ) {
-
-                $bw_data['err_bw_msg']  = $bw_arr->Errors[0]->Message;
-                $bw_data['err_bw_code'] = ( isset( $bw_arr->Errors[0]->Code ) ) ? $bw_arr->Errors[0]->Code : null;
-
-            }
-
-        }
-
-    } else { // No domain name.
-
-        $bw_data['error'] = 4002;
-        $bw_data['err_nn'] = 'No domain name';
-
-    }
+    $bw_data = netrics_api_builtwith( $post_id, $api_key );
 
     return $bw_data;
-
 }
 
 
+/* ------------------------------------------------------------------------ *
+ * Veracity.ai
+ * ------------------------------------------------------------------------ */
+/**
+ * Get ID from Veracity search then store as post meta.
+ *
+ * @see https://dashboard.veracity.ai/dashboard/docs/
+ *
+ * @since   0.1.0
+ *
+ * @param  int  $post_id Post ID.
+ * @return array  $alexa  Data from Alexa.
+ */
+function netrics_veracity_id( $post_id, $set = 1 ) {
+    // https://APIKEY:SECRET@dashboard.veracity.ai/api/v1/auth_test/;
+
+    $pk = 0; // Var for Veracity ID.
+    // Build Veracity API url.
+    $api_key    = 'CB92E85AB1384E0E9B580C4D395C4103';
+    $api_secret = 'D288870706D4448BAC0814CE1E32C3EF';
+    $api        = '@dashboard.veracity.ai/api/v1/domain/search/?q=';
+    $domain  = get_post_meta( $post_id, 'nn_pub_site', true );
+    $api_url    = 'https://' . $api_key . ':' . $api_secret . $api . $domain;
+
+    $json = newsstats_request_data( $api_url );
+    $data = json_decode( $json );
+    $pk   = $data->response[0]->pk ?? 0;
+    if ( $set ) {
+        $meta = add_post_meta( $post_id, 'nn_veracity', absint( $pk ), true );
+    }
+
+    return $pk;
+}
+
+/**
+ * Get articles of domains from Veracity crawls then store as post meta.
+ *
+ * @see https://dashboard.veracity.ai/dashboard/docs/
+ *
+ * @since   0.1.0
+ *
+ * @param  int  $post_id Post ID.
+ * @return array  $alexa  Data from Veracity.
+ */
+function netrics_get_veracity_articles( $post_id, $set = 1 ) {
+    // https://APIKEY:SECRET@dashboard.veracity.ai/api/v1/auth_test/;
+
+    $pk = 0; // Var for Veracity ID.
+    // Build Veracity API url.
+    $api_key    = 'CB92E85AB1384E0E9B580C4D395C4103';
+    $api_secret = 'D288870706D4448BAC0814CE1E32C3EF';
+    $api        = '@dashboard.veracity.ai/api/v1/domain/articles/?page=1&per_page=25&pk=';
+    $pk         = get_post_meta( $post_id, 'nn_veracity', true );
+    $api_url    = 'https://' . $api_key . ':' . $api_secret . $api . $pk;
+
+    $json = newsstats_request_data( $api_url );
+    $data = json_decode( $json );
+    // $pk   = $data->response[0]->pk ?? 0;
+    if ( $set ) {
+        // $meta = add_post_meta( $post_id, 'nn_veracity', absint( $pk ), true );
+    }
+
+    return $data;
+}
 
 /*
+// Get offset for next post after $post_id.
+// $offset = array_search( 4364, $query_ids->posts ) + 1;
 
-BuiltWith data example, coverted to array and stored in post meta:
-Array
-(
-    [ads] => 74
-    [analytics] => 34
-    [CDN] => 1
-    [cdn] => 15
-    [cdns] => 3
-    [cms] => 5
-    [copyright] => 0
-    [css] => 3
-    [feeds] => 1
-    [framework] => 12
-    [hosting] => 9
-    [javascript] => 48
-    [language] => 1
-    [link] => 0
-    [mapping] => 1
-    [media] => 3
-    [mobile] => 6
-    [mx] => 6
-    [ns] => 0
-    [payment] => 2
-    [Server] => 2
-    [shop] => 1
-    [ssl] => 3
-    [Web Master] => 3
-    [Web Server] => 11
-    [widgets] => 13
-    [date] => 2019-06
-    [error] => 0
-)
+// To set all Veracity Ids.
+$query_ids = netrics_get_pubs_ids( 2000, 341 ); // posts_per_page, offset.
 
-$bw_cats = array(
-    'ads'         => 'Advertising',
-    'analytics'   => 'Analytics and Tracking',
-    'CDN'         => 'Content Delivery Network',
-    'cdn'         => 'Content Delivery Network', // ignore
-    'cdns'        => 'Verified CDN',
-    'cms'         => 'Content Management System',
-    'copyright'   => 'Copyright',
-    'css'         => 'CSS Media Queries',
-    'docinfo'     => 'Document Standards',
-    'encoding'    => 'Document Encoding',
-    'feeds'       => 'Syndication Techniques',
-    'framework'   => 'Frameworks',
-    'hosting'     => 'Web Hosting Providers',
-    'javascript'  => 'JavaScript Libraries and Functions',
-    'language'    => 'Language',
-    'link'        => 'Verified Link',
-    'mapping'     => 'Mapping',
-    'media'       => 'Audio / Video Media',
-    'mobile'      => 'Mobile',
-    'mx'          => 'Email Hosting Providers',
-    'ns'          => 'Name Server',
-    'payment'     => 'Payment',
-    'seo_headers' => 'SEO Header Tag',
-    'seo_meta'    => 'SEO Meta Tag',
-    'seo_title'   => 'SEO Title Tag',
-    'shipping'    => 'Shipping Providers',
-    'Server'      => 'Operating Systems and Servers',
-    'shop'        => 'eCommerce',
-    'ssl'         => 'SSL Certificates',
-    'Web Master'  => 'Web Master Registration',
-    'Web Server'  => 'Web Servers',
-    'widgets'     => 'Widgets'
-);
+foreach ( $query_ids->posts as $post_id ) {
+    // $pk   = netrics_veracity_id( $post_id );
+    $meta = get_post_meta( $post_id, 'nn_veracity', true );
 
-
-
-BuiltWith error example, raw JSON:
-'{"Errors":[{"Lookup":null,"Message":"Domain not in our system. Paid for lookups would return something.","Code":-10}],"NextOffset":null,"Results":null}';
-
+    echo "$post_id\t$pk\t$meta\n";
+}
 */
-
