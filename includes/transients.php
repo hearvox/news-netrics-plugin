@@ -451,7 +451,7 @@ function newsstats_set_pubs_pagespeed() {
     $metrics   = array( 'dom', 'requests', 'size', 'speed', 'tti', 'score' );
 
     foreach ( $query->posts as $post ) {
-        $articles = get_post_meta( $post->ID, 'nn_articles_201905', true);
+        $articles = get_post_meta( $post->ID, 'nn_articles_201907', true);
 
         if ( $articles ) {
 

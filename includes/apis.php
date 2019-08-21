@@ -41,7 +41,7 @@ function netrics_get_pubs_ids( $per_page = 100, $offset = 0, $fields = 'ids' ) {
  * @param  int    $offset    The starting point in array.
  * @return array  $query     Array of WP Post objects.
  */
-function netrics_get_pubs_tax_ids( $per_page = 100, $offset = 0, $fields = 'ids', $flag = '201906' ) {
+function netrics_get_pubs_tax_ids( $per_page = 100, $offset = 0, $fields = 'ids', $flag = '201908' ) {
     $args = array(
         'post_type' => 'publication',
         'orderby'   => 'title',
@@ -187,7 +187,9 @@ function netrics_get_pub_posts( $per_page = 100, $offset = 0 ) {
  * @param int $post_id Post ID.
  * @return string $url Post meta value
  */
-function netrics_get_pub_items( $post_id, $meta_key = 'nn_articles_201907' ) {
+function netrics_get_pub_items( $post_id, $key = '' ) {
+    $meta_key = ( $key ) ? $key : 'nn_articles_' . netrics_get_data_month();
+
     $items = get_post_meta( $post_id, $meta_key, true ); // Articles.
 
     if ( is_array( $items ) && isset( $items[0]['url'] ) ) {
@@ -272,29 +274,21 @@ function netrics_api_calls( $query, $api = 'awis', $api_key = '' ) {
     }
 }
 
-/* ------------------------------------------------------------------------ *
- * PageSpeed Insights (with Lighthouse)
- * ------------------------------------------------------------------------ */
 /**
- * Get PSI performance results for an URL via API call.
+ * Set month to use for API calls.
  *
  * @since   0.1.1
  *
- * @todo Log data to file.
- *
- * @param  int  $post_id Post ID.
- * @return array  $alexa  Data from Alexa.
+ * @return
  */
-function netrics_api_call_pagespeed_url( $url, $strategy = 'mobile' ) {
-    // PSI file with API call.
-    require_once( plugin_dir_path( __FILE__ ) . 'api/pagespeed.php' );
-
-    $psi_data = netrics_get_pagespeed( $url, $strategy );
-
-    return $psi_data;
+function netrics_get_data_month() {
+    return date( 'Ym' );
 }
 
-/**
+/* ------------------------------------------------------------------------ *
+ * PageSpeed Insights (with Lighthouse)
+ * ------------------------------------------------------------------------ */
+ /**
  * Get PSI performance results for Publication articles via API call.
  *
  * @since   0.1.1
@@ -310,7 +304,26 @@ function netrics_api_call_pagespeed( $query_ids, $strategy = 'mobile' ) {
 
     // $query_ids = new WP_Query( array( 'post_type' => 'publication', 'p' => 4030, 'fields' => 'ids' ) );
 
-    $psi_data = netrics_psi_test( $query_ids, $strategy  );
+    $psi_data = netrics_get_pubs_pagespeed( $query_ids, $strategy  );
+
+    return $psi_data;
+}
+
+/**
+ * Get PSI performance results for one URL via API call.
+ *
+ * @since   0.1.1
+ *
+ * @todo Log data to file.
+ *
+ * @param  int  $post_id Post ID.
+ * @return array  $alexa  Data from Alexa.
+ */
+function netrics_api_call_pagespeed_url( $url, $strategy = 'mobile' ) {
+    // PSI file with API call.
+    require_once( plugin_dir_path( __FILE__ ) . 'api/pagespeed.php' );
+
+    $psi_data = netrics_get_pagespeed( $url, $strategy );
 
     return $psi_data;
 }

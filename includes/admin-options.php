@@ -71,26 +71,39 @@ function netrics_settings_display() {
         <h1>News Netrics (<?php echo NEWSNETRICS_VERSION; ?>)</h1>
         <section style="padding-bottom: 2rem;">
             <header>
+                <h2>Display New Data</h2>
+            </header>
+            <form method="post">
+                <fieldset>
+                    <label><?php _e( 'Choose month for which to display PSI data:', 'newsnetrics' ); ?></label]>
+                    <input id="month" type="month" name="month" min="<?php echo date( "Y-m", strtotime('-2 month') ); ?>" max="<?php echo date( "Y-m" ); ?>" required pattern="[0-9]{4}-[0-9]{2}"><br>
+                    <?php wp_nonce_field( 'netrics_input_data_month', 'netrics_month' ); ?>
+                    <input type="submit" name="nn_data_month" id="nn-data-month" class="button button-primary" value="Change Month">
+                </fieldset>
+            </form>
+            <hr>
+        </section>
+        <section style="padding-bottom: 2rem;">
+            <header>
                 <h2>Update Data</h2>
             </header>
-            <!-- Update feed form -->
             <?php $data_to_update = array( 'publication', 'city', 'county', 'state' );  ?>
             <form method="post">
                 <fieldset>
-                    <legend><?php _e( 'Check type of data (used for maps, tables, etc.):', 'newsnetrics' ); ?></legend>
+                    <legend><?php _e( 'Choice type of data (used for maps, tables, etc.) to update:', 'newsnetrics' ); ?></legend>
                     <ul class="inside">
                         <?php foreach ( $data_to_update  as $key ): ?>
                             <li><label><input type="checkbox" id="nn-update-<?php echo $key; ?>" value="1" name="nn_data[<?php echo $key; ?>]" /> <?php echo ucfirst( $key ); ?></label></li>
                         <?php endforeach ?>
                     </ul>
-                <?php wp_nonce_field( 'netrics_tax', 'netrics_update_data' ); ?>
+                <?php wp_nonce_field( 'netrics_data', 'netrics_update_data' ); ?>
                 <input type="submit" name="nn_update_data" id="nn-submit-import-tax" class="button button-primary" value="Update">
                 </fieldset>
             </form>
             <?php
             // Run update scripts.
             if ( isset( $_POST['nn_update_data'] ) && isset( $_POST['nn_data'] ) && ! empty( $_POST['nn_data'] ) ) {
-                if ( wp_verify_nonce( $_POST['netrics_update_data'], 'netrics_tax' ) ) {
+                if ( wp_verify_nonce( $_POST['netrics_update_data'], 'netrics_data' ) ) {
                     echo '<p class="description">Nonce verified.</p>';
                 } else {
                     echo '<p class="description">Not allowed.</p>';

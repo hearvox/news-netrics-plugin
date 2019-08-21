@@ -418,6 +418,91 @@ function netrics_get_region_data( $set = 1, $page_id = 7594 ) {
     return $state_data;
 }
 
+function netrics_get_region_data_2( $post_id ) {
+
+    // content-single-publication
+    $term_pop  = ( get_term_meta( $term_id, 'nn_region_pop', true ) )
+        ? get_term_meta( $term_id, 'nn_region_pop', true ) : false;
+    $term_pop  = ( $term_pop ) ? number_format( floatval( $term_pop ) ) : '';
+
+    $args_region = array(
+        'format'    => 'id',
+        'separator' => ' &gt; ',
+    );
+    $regions = get_term_parents_list( $term_id, 'region', $args_region ) ;
+
+    $city       = $term_region[0]->name;
+    $terms_reg  = get_ancestors( $term_id, 'region', 'taxonomy' );
+    $state_id   = end( $terms_reg );
+    $state_arr  = get_term_by( 'id', absint( $state_id ), 'region' );
+    $state      = $state_arr->name;
+    $latlon     = get_term_meta( $term_id, 'nn_region_latlon', true );
+
+    // content-archive
+    $term_region = get_the_terms( $post_id, 'region' );
+    $term_id     = ($term_region) ? $term_region[0]->term_id : false;
+
+    $term_pop  = ( get_term_meta( $term_id, 'nn_region_pop', true ) )
+        ? get_term_meta( $term_id, 'nn_region_pop', true ) : false;
+    $city_pop  = ( $term_pop ) ? ' (<em>Pop.:</em> ' . number_format( floatval( $term_pop ) ) . ')' : '';
+
+    $args_region = array(
+        'format'    => 'id',
+        'separator' => ' / ',
+    );
+    $regions = get_term_parents_list( $term_id, 'region', $args_region ) ;
+
+    // taxonomy-owner
+    $term_city   = get_the_terms( $post_id, 'region' );
+    $city        = ( $term_city && isset( $term_city[0]->name ) ) ? $term_city[0]->name : 'ERROR:city';
+    $city_meta   = ( $term_city && isset( $term_city[0]->term_id ) )
+        ? get_term_meta( $term_city[0]->term_id ) : false;
+    $city_pop    = ( $city_meta && isset( $city_meta['nn_region_pop'][0] ) )
+        ? $city_meta['nn_region_pop'][0] : 0;
+    $city_latlon = ( $city_meta && isset( $city_meta['nn_region_latlon'][0] ) )
+        ? $city_meta['nn_region_latlon'][0] : '';
+    $term_county = ( $term_city && isset( $term_city[0]->parent ) )
+        ? get_term( $term_city[0]->parent ) : false;
+    $county      = ( $term_county && isset( $term_county->name ) ) ? $term_county->name : 'ERROR:county';
+    $term_state  = ( $term_county && isset( $term_county->parent ) )
+        ? get_term( $term_county->parent ) : false;
+    $state       = ( $term_state && isset( $term_state->name ) ) ? $term_state->name : 'ERROR:state';
+
+    // page-data-table-newspapers, page-data-table
+    // Tax terms (and parents for Region: county, state).
+    $term_city   = get_the_terms( $post_id, 'region' );
+    $city        = ( $term_city && isset( $term_city[0]->name ) ) ? $term_city[0]->name : '';
+    $city_meta   = ( $term_city && isset( $term_city[0]->term_id ) )
+        ? get_term_meta( $term_city[0]->term_id ) : false;
+    $city_pop    = ( $city_meta && isset( $city_meta['nn_region_pop'][0] ) )
+        ? $city_meta['nn_region_pop'][0] : 0;
+    $city_latlon = ( $city_meta && isset( $city_meta['nn_region_latlon'][0] ) )
+        ? $city_meta['nn_region_latlon'][0] : '';
+    $term_county = ( $term_city && isset( $term_city[0]->parent ) )
+        ? get_term( $term_city[0]->parent ) : false;
+    $county      = ( $term_county && isset( $term_county->name ) ) ? $term_county->name : '';
+    $term_state  = ( $term_county && isset( $term_county->parent ) )
+        ? get_term( $term_county->parent ) : false;
+    $state       = ( $term_state && isset( $term_state->name ) ) ? $term_state->name : '';
+
+    // page-news-table
+    // Get Region values: city, county and state (tax terms), and city population (term meta).
+    $term_city   = get_the_terms( $post_id, 'region' );
+    $city_meta   = ( $term_city && isset( $term_city[0]->term_id ) )
+        ? get_term_meta( $term_city[0]->term_id ) : false;
+    $city_pop    = ( $city_meta && isset( $city_meta['nn_region_pop'][0] ) )
+        ? $city_meta['nn_region_pop'][0] : 0;
+    $term_county = ( $term_city && isset( $term_city[0]->parent ) )
+        ? get_term( $term_city[0]->parent ) : false;
+    $term_state  = ( $term_county && isset( $term_county->parent ) )
+        ? get_term( $term_county->parent ) : false;
+
+    // page-regions-city, page-regions-county, page-regions
+    $city_data = get_post_meta( 7594, 'nn_cities', true );
+    $counties_data = get_post_meta( 7594, 'nn_counties', true );
+    $states_data = get_post_meta( 7594, 'nn_states', true );
+
+}
 
 
 /**

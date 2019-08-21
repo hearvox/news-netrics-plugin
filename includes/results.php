@@ -412,7 +412,8 @@ function netrics_site_pagespeed( $post_id, $meta_key = 'nn_articles_201905' ) {
 function netrics_pagespeed_results_list( $query, $items ) {
     $list = '';
     foreach ( $items as $item ) {
-        $list .= "<li><a href=\"{$item['url']}\">{$item['title']}</a>";
+
+        $list .= ( isset( $item['url'] ) ) ? "<li><a href=\"{$item['url']}\">{$item['title']}</a>" : '<li>';
         if ( isset( $item['pagespeed']['error'] ) ) {
 
             $pgspeed = $item['pagespeed'];
@@ -483,61 +484,6 @@ function netrics_pagespeed_format( $metric, $num, $size = 0 ) {
 
     return $num;
 }
-
-
-
-/**
- * Get Alexa data for site (global rank, and Year online.)
- *
- * @param  int   $post_id  ID of a post.
- * @return array $pub_ps   Array of PageSpeed averages.
- */
-function netrics_site_alexa( $post_id ) {
-
-        // Get site data (inclding Alexa and BuiltWith).
-        $nn_site  = get_post_meta( $post_id, 'nn_site', true);
-
-        $site_awis = array();
-        // Get Alexa data.
-        $site_awis['rank']  = ( isset ( $nn_site['alexa']['rank'] ) ) ?  $nn_site['alexa']['rank'] : null;
-        $site_awis['desc']  = ( isset ( $nn_site['alexa']['desc'] ) ) ?  $nn_site['alexa']['desc'] : null;
-        $since = ( isset ( $nn_site['alexa']['since'] ) && $nn_site['alexa']['since'] )
-            ? date_parse_from_format( 'd-M-Y', $nn_site['alexa']['since'] ) : false;
-        $site_awis['year']  = ( $since ) ? absint( $since['year'] ) : null;
-
-        return $site_awis;
-
-}
-
-/**
- * Get BuiltWith counts of web technologies used at site.
- *
- * @param  int   $post_id  ID of a post.
- * @return array $pub_bw   Array of BuiltWith tech counts.
- */
-function netrics_site_bulltwith( $post_id ) {
-
-        // Get site data (inclding Alexa and BuiltWith).
-        $nn_site  = get_post_meta( $post_id, 'nn_site', true);
-
-        $site_bw = array ();
-        // BuiltWith data, remove item from sum.
-        if ( isset( $nn_site['builtwith'] ) ) {
-            unset( $nn_site['builtwith']['date'] );
-            unset( $nn_site['builtwith']['error'] );
-
-        }
-
-        // Sum and category counts.
-        $site_bw['techs']   = ( isset ( $nn_site['builtwith'] ) ) ? array_sum( $nn_site['builtwith'] ) : '';
-        $site_bw['ad']      = ( isset ( $nn_site['builtwith']['ads'] ) ) ? $nn_site['builtwith']['ads'] : '';
-        $site_bw['tracks']  = ( isset ( $nn_site['builtwith']['analytics'] ) ) ? $nn_site['builtwith']['analytics'] : '';
-        $site_bw['scripts'] = ( isset ( $nn_site['builtwith']['javascript'] ) ) ? $nn_site['builtwith']['javascript'] : '';
-
-        return $site_bw;
-
-}
-
 
 /**
  * Get
@@ -723,6 +669,87 @@ function netrics_get_pubs_query_data( $query = array(), $circ = 1, $rank = 1 ) {
     }
 
     return $pubs_data;
+}
+
+/* ------------------------------------------------------------------------ *
+ * Alexa Web Information Service (Amazon) API
+ * ------------------------------------------------------------------------ */
+/**
+ * Get the AWIS data for publication, stored in post meta.
+ *
+ * @param  int   $post_id  ID of a post.
+ * @return array $awis     Array of AWIS data.
+ */
+function netrics_get_site_awis_data( $post_id ) {
+    $awis          = array();
+    $nn_site       = get_post_meta( $post_id , 'nn_site' );
+    $awis['desc']  = ( isset( $nn_site[0]['alexa']['desc']  ) && $nn_site[0]['alexa']['desc'] )
+        ? '&mdash; ' . $nn_site[0]['alexa']['desc'] : '';
+    $awis['rank']  = ( isset( $nn_site[0]['alexa']['rank'] ) && $nn_site[0]['alexa']['rank'] )
+        ? number_format( floatval($nn_site[0]['alexa']['rank'] ) ) : '--';
+    $awis['since'] = ( isset( $nn_site[0]['alexa']['since']  ) && $nn_site[0]['alexa']['since'] )
+        ? date_parse_from_format( 'd-M-Y', $nn_site[0]['alexa']['since'] ) : false;
+    $awis['year']  = ( $awis_since ) 
+        ? absint( $awis_since['year'] ) : '--';
+    $awis['links'] = ( isset( $nn_site[0]['alexa']['links']  ) && $nn_site[0]['alexa']['links'] )
+        ? number_format( (int) $nn_site[0]['alexa']['links'] ) : '--';
+
+    return $awis;
+}
+
+/**
+ * Get Alexa data for site (global rank, and Year online.)
+ *
+ * @param  int   $post_id  ID of a post.
+ * @return array $pub_ps   Array of PageSpeed averages.
+ */
+function netrics_site_alexa( $post_id ) {
+    // Get site data (inclding Alexa and BuiltWith).
+    $nn_site  = get_post_meta( $post_id, 'nn_site', true);
+    $site_awis = array();
+    // Get Alexa data.
+    $site_awis['rank']  = ( isset ( $nn_site['alexa']['rank'] ) ) 
+        ?  $nn_site['alexa']['rank'] : null;
+    $site_awis['desc']  = ( isset ( $nn_site['alexa']['desc'] ) ) 
+        ?  $nn_site['alexa']['desc'] : null;
+    $since = ( isset ( $nn_site['alexa']['since'] ) && $nn_site['alexa']['since'] )
+        ? date_parse_from_format( 'd-M-Y', $nn_site['alexa']['since'] ) : false;
+    $site_awis['year']  = ( $since ) ? absint( $since['year'] ) : null;
+
+    return $site_awis;
+
+}
+
+/**
+ * Get BuiltWith counts of web technologies used at site.
+ *
+ * @param  int   $post_id  ID of a post.
+ * @return array $pub_bw   Array of BuiltWith tech counts.
+ */
+function netrics_site_bulltwith( $post_id ) {
+        // Get site data (inclding Alexa and BuiltWith).
+        $nn_site  = get_post_meta( $post_id, 'nn_site', true);
+        $site_bw  = array ();
+
+        // BuiltWith data, remove item from sum.
+        if ( isset( $nn_site['builtwith'] ) ) {
+            unset( $nn_site['builtwith']['date'] );
+            unset( $nn_site['builtwith']['error'] );
+
+        }
+
+        // Sum and category counts.
+        $site_bw['techs']   = ( isset ( $nn_site['builtwith'] ) ) 
+            ? array_sum( $nn_site['builtwith'] ) : '';
+        $site_bw['ad']      = ( isset ( $nn_site['builtwith']['ads'] ) ) 
+            ? $nn_site['builtwith']['ads'] : '';
+        $site_bw['tracks']  = ( isset ( $nn_site['builtwith']['analytics'] ) ) 
+            ? $nn_site['builtwith']['analytics'] : '';
+        $site_bw['scripts'] = ( isset ( $nn_site['builtwith']['javascript'] ) ) 
+            ? $nn_site['builtwith']['javascript'] : '';
+
+        return $site_bw;
+
 }
 
 

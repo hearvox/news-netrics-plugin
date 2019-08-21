@@ -14,16 +14,16 @@
  *
  * @since   0.1.0
  *
- * @param int $query   Array of Post IDs.
- * @return string $url Post meta value
+ * @param int $query_ids  Array of Post IDs.
+ * @return string         Post meta value
  */
 function netrics_get_pubs_pagespeed( $query_ids, $strategy = 'mobile'  ) {
-    if ( ! isset( $query->posts ) ) {
+    if ( ! isset( $query_ids->posts ) ) {
         $query_ids = netrics_get_pubs_ids();
     }
 
     foreach ( $query_ids->posts as $post_id ) {
-        echo "ID: $post_id\nURL: ";
+        echo "ID: $post_id\n";
         $terms = '';
         $items = netrics_get_pub_items( $post_id ); // Get articles.
 
@@ -39,23 +39,23 @@ function netrics_get_pubs_pagespeed( $query_ids, $strategy = 'mobile'  ) {
 
             // Run PSI.
             if ( isset( $item['url'] ) && wp_http_validate_url( $item['url'] ) ) {
-                echo $item['url'] . "\n";
+                echo "URL: {$item['url']}\n";
                 $pagespeed = netrics_get_pagespeed( $item['url'], $strategy ); // Run PageSpeed test.
                 print_r( $pagespeed );
             }
 
             // Store PSI results in post meta.
             if ( $pagespeed ) { // Successful remote request.
-                // $terms = netrics_save_pagespeed( $post_id, $pagespeed, $key );
+                $terms = netrics_save_pagespeed( $post_id, $pagespeed, $key );
             } else {
-                // return new WP_Error( 'pagespeed', __( "No PageSpeed results." ), $post_id );
+                return new WP_Error( 'pagespeed', __( "No PageSpeed results." ), $post_id );
             }
 
             sleep( 1 ); // Works better with a pause.
         }
     }
 
-    return get_post_meta( $post_id, 'nn_articles', true );
+    return "$post_id $terms[0]\n";
 }
 
 /**
@@ -117,15 +117,15 @@ function netrics_get_pagespeed( $url, $strategy = 'mobile' ) {
  * @param int $post_id Post ID.
  * @return string $url Post meta value
  */
-function netrics_save_pagespeed( $post_id, $pagespeed, $key_meta = 'nn_articles', $term_id = 6222 ) {
-    $key =  $key_meta . '_' . date( 'Ym' );
+function netrics_save_pagespeed( $post_id, $pagespeed, $key, $term_id = 6286 ) {
     if ( $pagespeed ) {
-        $items = get_post_meta( $post_id, $key, true );
+        $meta_key = 'nn_articles_' . netrics_get_data_month();
+        $items    = get_post_meta( $post_id, $meta_key, true );
         $items[$key]['pagespeed'] = $pagespeed; // Save results as array in post_meta.
-        update_post_meta( $post_id, $key, $items );
+        update_post_meta( $post_id, $meta_key, $items );
         $terms = wp_set_post_terms( $post_id, array( $term_id ), 'flag', true ); // Flag success.
     } else {
-        $terms = wp_set_post_terms( $post_id, 'redo' . $key, 'post_tag', true ); // Flag error.
+        $terms = wp_set_post_terms( $post_id, $key . 'redo' . date( 'Ym' ), 'post_tag', true ); // Tag error.
     }
 
     return $terms;
