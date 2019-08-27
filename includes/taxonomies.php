@@ -418,7 +418,10 @@ function netrics_get_region_data( $set = 1, $page_id = 7594 ) {
     return $state_data;
 }
 
-function netrics_get_region_data_2( $post_id ) {
+/**
+ * Copy of Region code from theme templates
+ */
+function netrics_get_region_data_XXX( $post_id ) {
 
     // content-single-publication
     $term_pop  = ( get_term_meta( $term_id, 'nn_region_pop', true ) )
@@ -506,7 +509,7 @@ function netrics_get_region_data_2( $post_id ) {
 
 
 /**
- * Get data for all Counties (Region taxonomy term parent = State).
+ * Get data for all Counties in a State (Region taxonomy term parent = State).
  *
  * Data includes Population, total Circulation.
  *
@@ -616,50 +619,13 @@ Papers in Counties:
  * @return array $county_data Array of data for all Region: States > Counties.
  */
 function netrics_write_county_data() {
-/*
-$county_data = get_post_meta( 7594, 'nn_counties', true );
-print_r( $county_data[179] );
-Array
-(
-    [term_id] => 1587
-    [name] => Mohave County
-    [slug] => mohave-county-az
-    [term_group] => 0
-    [term_taxonomy_id] => 1587
-    [taxonomy] => region
-    [description] => Mohave County, Arizona
-    [parent] => 1398
-    [count] => 3
-    [filter] => raw
-    [geoid] => 0500000US04015
-    [population] => 209550
-    [pop_density] => 15
-    [circ_sum] => 23610
-    [state] => AZ
-)
-*/
-
-
     $file_path   = '/home/wp_wugkzz/news.pubmedia.us/tests/geo/data/us-census-2018-county.js';
     $county_data = get_post_meta( 7594, 'nn_counties', true );
 
     // Remove problem counties.
     $key_1 = array_search( 1564, array_column( $county_data, 'term_id') ); // Kusilvak Census Area, Alaska.
     $key_2 = array_search( 3894, array_column( $county_data, 'term_id') ); // Oglala Lakota County, South Dakota.
-
-/*
-1564 "GEO_ID": "0500000US02270", "STATE": "02", "COUNTY": "270", "NAME": "Wade Hampton", "LSAD": "CA"
-3894 "GEO_ID": "0500000US46113", "STATE": "46", "COUNTY": "113", "NAME": "Shannon", "LSAD": "County"
-
-*/
-
     unset( $county_data[ $key_1 ], $county_data[ $key_2 ] );
-/*
-            $circ_per_pop = ( $circ_sum ) ? $circ_sum / $population : 0; // Circ./Pop.
-            $pub_per_pop  = ( $county->count ) ? $county->count / ( $population / 10000 ) : 0; // Pub/Pop.-10K.
-                            'circ_per_pop'   => round( $circ_per_pop, 3 ),
-                'pub_per_pop'    => round( $pub_per_pop, 3 ),
-*/
 
     $json = '[["GEO_ID","POP","DENSITY","GEONAME","pubs","circ","name","slug","term_id","parent","state"],' . "\n"; // Open JSON var.
     // Populate rows.
@@ -691,6 +657,42 @@ Array
 
     return $write_data;
 }
+
+/*
+Notes for netrics_write_county_data():
+
+$county_data = get_post_meta( 7594, 'nn_counties', true );
+print_r( $county_data[179] );
+Array
+(
+    [term_id] => 1587
+    [name] => Mohave County
+    [slug] => mohave-county-az
+    [term_group] => 0
+    [term_taxonomy_id] => 1587
+    [taxonomy] => region
+    [description] => Mohave County, Arizona
+    [parent] => 1398
+    [count] => 3
+    [filter] => raw
+    [geoid] => 0500000US04015
+    [population] => 209550
+    [pop_density] => 15
+    [circ_sum] => 23610
+    [state] => AZ
+)
+
+Changed counties- Kusilvak Census Area, Alaska and Oglala Lakota County, South Dakota, were:
+1564 "GEO_ID": "0500000US02270", "STATE": "02", "COUNTY": "270", "NAME": "Wade Hampton", "LSAD": "CA"
+3894 "GEO_ID": "0500000US46113", "STATE": "46", "COUNTY": "113", "NAME": "Shannon", "LSAD": "County"
+
+Old calcs:
+$circ_per_pop = ( $circ_sum ) ? $circ_sum / $population : 0; // Circ./Pop.
+$pub_per_pop  = ( $county->count ) ? $county->count / ( $population / 10000 ) : 0; // Pub/Pop.-10K.
+'circ_per_pop'   => round( $circ_per_pop, 3 ),
+'pub_per_pop'    => round( $pub_per_pop, 3 ),
+*/
+
 
 /**
  * Get data for all Cities (childless Region taxonomy term = City).
@@ -801,7 +803,7 @@ function netrics_get_state_totals( $state_data = array() ) {
 }
 
 /**
- * Get terms for all counties.
+ * Get term objects for all counties.
  *
  *
  * @since   0.1.0

@@ -282,7 +282,8 @@ function netrics_api_calls( $query, $api = 'awis', $api_key = '' ) {
  * @return
  */
 function netrics_get_data_month() {
-    return date( 'Ym' );
+    // return date( 'Ym' );
+    return '201908';
 }
 
 /* ------------------------------------------------------------------------ *

@@ -71,13 +71,27 @@ function netrics_settings_display() {
         <h1>News Netrics (<?php echo NEWSNETRICS_VERSION; ?>)</h1>
         <section style="padding-bottom: 2rem;">
             <header>
+                <h2>Get New Data</h2>
+            </header>
+            <form method="post">
+                <fieldset>
+                    <label><?php _e( 'Choose month to run PSI tests:', 'newsnetrics' ); ?></label]>
+                    <input id="month" type="month" name="month" min="<?php echo date( "Y-m", strtotime('-2 month') ); ?>" max="<?php echo date( "Y-m" ); ?>" required pattern="[0-9]{4}-[0-9]{2}"><br>
+                    <?php wp_nonce_field( 'netrics_input_get_data_month', 'netrics_get_month' ); ?>
+                    <input type="submit" name="nn_data_month" id="nn-data-month" class="button button-primary" value="Change Month">
+                </fieldset>
+            </form>
+            <hr>
+        </section>
+        <section style="padding-bottom: 2rem;">
+            <header>
                 <h2>Display New Data</h2>
             </header>
             <form method="post">
                 <fieldset>
                     <label><?php _e( 'Choose month for which to display PSI data:', 'newsnetrics' ); ?></label]>
                     <input id="month" type="month" name="month" min="<?php echo date( "Y-m", strtotime('-2 month') ); ?>" max="<?php echo date( "Y-m" ); ?>" required pattern="[0-9]{4}-[0-9]{2}"><br>
-                    <?php wp_nonce_field( 'netrics_input_data_month', 'netrics_month' ); ?>
+                    <?php wp_nonce_field( 'netrics_input_set_data_month', 'netrics_set_month' ); ?>
                     <input type="submit" name="nn_data_month" id="nn-data-month" class="button button-primary" value="Change Month">
                 </fieldset>
             </form>
@@ -111,7 +125,10 @@ function netrics_settings_display() {
             } else {
                     // echo '<p class="description">Select data to update.</p>';
             }
+            echo '<pre>';
             print_r( $_POST );
+            print_r( netrics_get_options() );
+            echo '</pre>';
             ?>
         </section>
         <hr>

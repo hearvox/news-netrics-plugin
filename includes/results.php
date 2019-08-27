@@ -250,7 +250,7 @@ function netrics_pagespeed_corr( $array ) {
     $results = array( 'dom', 'requests', 'size', 'speed', 'tti', 'score' );
     ?>
 <table class="tabular" style="">
-    <caption>U.S. daily newspapers: Correlations of Pagespeed/Lighthouse metrics (2019-05)</caption>
+    <caption>U.S. daily newspapers: Correlations of Pagespeed/Lighthouse metrics (2019-08)</caption>
     <thead>
         <td style="width: 11rem;"></td>
         <?php foreach ($results as $key => $result ) { ?>
@@ -331,7 +331,7 @@ function netrics_pagespeed_corr( $array ) {
  * @param  int   $post_id  ID of a post.
  * @return array $pub_ps   Array of PageSpeed averages.
  */
-function netrics_pagespeed_avgs( $post_id, $date = '2019-07' ) {
+function netrics_pagespeed_avgs( $post_id, $date = '2019-08' ) {
     $data    = get_post_meta( $post_id, 'nn_articles', true);
     $items   = $data[ $date ];
     $site_ps = array();
@@ -365,14 +365,13 @@ function netrics_pagespeed_avgs( $post_id, $date = '2019-07' ) {
     return $site_ps;
 }
 
-
 /**
  * Get PageSpeed averages for all articles of a Publication with results.
  *
  * @param  int   $post_id  ID of a post.
  * @return array $pub_ps   Array of PageSpeed averages.
  */
-function netrics_site_pagespeed( $post_id, $meta_key = 'nn_articles_201905' ) {
+function netrics_site_pagespeed( $post_id, $meta_key = 'nn_articles_201908' ) {
     $items   = get_post_meta( $post_id, $meta_key, true);
     $site_ps = array();
 
@@ -689,7 +688,7 @@ function netrics_get_site_awis_data( $post_id ) {
         ? number_format( floatval($nn_site[0]['alexa']['rank'] ) ) : '--';
     $awis['since'] = ( isset( $nn_site[0]['alexa']['since']  ) && $nn_site[0]['alexa']['since'] )
         ? date_parse_from_format( 'd-M-Y', $nn_site[0]['alexa']['since'] ) : false;
-    $awis['year']  = ( $awis_since ) 
+    $awis['year']  = ( $awis_since )
         ? absint( $awis_since['year'] ) : '--';
     $awis['links'] = ( isset( $nn_site[0]['alexa']['links']  ) && $nn_site[0]['alexa']['links'] )
         ? number_format( (int) $nn_site[0]['alexa']['links'] ) : '--';
@@ -708,9 +707,9 @@ function netrics_site_alexa( $post_id ) {
     $nn_site  = get_post_meta( $post_id, 'nn_site', true);
     $site_awis = array();
     // Get Alexa data.
-    $site_awis['rank']  = ( isset ( $nn_site['alexa']['rank'] ) ) 
+    $site_awis['rank']  = ( isset ( $nn_site['alexa']['rank'] ) )
         ?  $nn_site['alexa']['rank'] : null;
-    $site_awis['desc']  = ( isset ( $nn_site['alexa']['desc'] ) ) 
+    $site_awis['desc']  = ( isset ( $nn_site['alexa']['desc'] ) )
         ?  $nn_site['alexa']['desc'] : null;
     $since = ( isset ( $nn_site['alexa']['since'] ) && $nn_site['alexa']['since'] )
         ? date_parse_from_format( 'd-M-Y', $nn_site['alexa']['since'] ) : false;
@@ -739,13 +738,13 @@ function netrics_site_bulltwith( $post_id ) {
         }
 
         // Sum and category counts.
-        $site_bw['techs']   = ( isset ( $nn_site['builtwith'] ) ) 
+        $site_bw['techs']   = ( isset ( $nn_site['builtwith'] ) )
             ? array_sum( $nn_site['builtwith'] ) : '';
-        $site_bw['ad']      = ( isset ( $nn_site['builtwith']['ads'] ) ) 
+        $site_bw['ad']      = ( isset ( $nn_site['builtwith']['ads'] ) )
             ? $nn_site['builtwith']['ads'] : '';
-        $site_bw['tracks']  = ( isset ( $nn_site['builtwith']['analytics'] ) ) 
+        $site_bw['tracks']  = ( isset ( $nn_site['builtwith']['analytics'] ) )
             ? $nn_site['builtwith']['analytics'] : '';
-        $site_bw['scripts'] = ( isset ( $nn_site['builtwith']['javascript'] ) ) 
+        $site_bw['scripts'] = ( isset ( $nn_site['builtwith']['javascript'] ) )
             ? $nn_site['builtwith']['javascript'] : '';
 
         return $site_bw;
