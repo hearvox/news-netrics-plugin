@@ -351,6 +351,39 @@ function netrics_api_call_awis( $post_id ) {
     return $awis;
 }
 
+/**
+ * Get publication's Alexa Web Info Service data.
+ *
+ * AWIS Global Rank, description, year online, etc..
+ *
+ * @since   0.1.1
+ *
+ * @param int $post_id  Default Post ID of Page for post meta.
+ *
+ * @return array $awis  Array of AWIS data.
+ */
+function netrics_get_awis_meta( $post_id ) {
+    $nn_site = get_post_meta( $post_id , 'nn_site' ); // Returns unserialized array.
+
+    if ( ! $nn_site ) {
+        return;
+    }
+
+    $awis = array();
+    $awis['desc']  = ( isset( $nn_site[0]['alexa']['desc']  ) && $nn_site[0]['alexa']['desc'] )
+        ? '&mdash; ' . $nn_site[0]['alexa']['desc'] : '';
+    $awis['rank']  = ( isset( $nn_site[0]['alexa']['rank'] ) && $nn_site[0]['alexa']['rank'] )
+        ? number_format( floatval($nn_site[0]['alexa']['rank'] ) ) : '--';
+    $awis['since'] = ( isset( $nn_site[0]['alexa']['since']  ) && $nn_site[0]['alexa']['since'] )
+        ? date_parse_from_format( 'd-M-Y', $nn_site[0]['alexa']['since'] ) : false;
+    $awis['year']  = ( $awis['since'] ) ? absint( $awis['since']['year'] ) : '--';
+    $awis['links'] = ( isset( $nn_site[0]['alexa']['links']  ) && $nn_site[0]['alexa']['links'] )
+        ? number_format( (int) $nn_site[0]['alexa']['links'] ) : '--';
+
+
+    return $awis;
+}
+
 
 /* ------------------------------------------------------------------------ *
  * BuiltWith: Free API

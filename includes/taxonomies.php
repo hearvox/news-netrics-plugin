@@ -313,6 +313,47 @@ function netrics_add_sortable_admin_columns( $columns ) {
 /*******************************
  =DATA (stored in Page post meta)
  ******************************/
+
+/*******************************
+ =REGION (taxonomy: State, County, City terms, each with term meta)
+ ******************************/
+/**
+ * Get Post's Region terms and term meta.
+ *
+ * City with country/state parents, and meta: population, latlon, fips, etc..
+ *
+ * @since   0.1.1
+ *
+ * @param int $post_id  Default Post ID of Page for post meta.
+ *
+ * @return array $city  Array of data for all post regions.
+ */
+function netrics_get_city_meta( $post_id ) {
+    $city_term = get_the_terms( $post_id, 'region' );
+
+    if ( ! $city_term ) {
+        return;
+    }
+
+    $city = array();
+    // Add city term object and meta to array.
+    $city['city_term'] = $city_term[0];
+    $city['city_meta'] = get_term_meta( $city_term[0]->term_id, '', true );
+
+    // Get county and state term IDs.
+    $ancestors = get_ancestors( $city_term[0]->term_id, 'region', 'taxonomy' );
+
+    // If county and state, add term and meta object to array.
+    if ( 2 === count( $ancestors ) ) { // If county and state.
+        $city['county_term'] = get_term( $ancestors[0], 'region' );
+        $city['county_meta'] = get_term_meta( $ancestors[0], '', true );
+        $city['state_term']  = get_term( $ancestors[1], 'region' );
+        $city['state_meta']  = get_term_meta( $ancestors[1], '', true );
+    }
+
+    return $city;
+}
+
 /**
  * Get data for all States (Region taxonomy term parent = 0).
  *
@@ -417,96 +458,6 @@ function netrics_get_region_data( $set = 1, $page_id = 7594 ) {
 
     return $state_data;
 }
-
-/**
- * Copy of Region code from theme templates
- */
-function netrics_get_region_data_XXX( $post_id ) {
-
-    // content-single-publication
-    $term_pop  = ( get_term_meta( $term_id, 'nn_region_pop', true ) )
-        ? get_term_meta( $term_id, 'nn_region_pop', true ) : false;
-    $term_pop  = ( $term_pop ) ? number_format( floatval( $term_pop ) ) : '';
-
-    $args_region = array(
-        'format'    => 'id',
-        'separator' => ' &gt; ',
-    );
-    $regions = get_term_parents_list( $term_id, 'region', $args_region ) ;
-
-    $city       = $term_region[0]->name;
-    $terms_reg  = get_ancestors( $term_id, 'region', 'taxonomy' );
-    $state_id   = end( $terms_reg );
-    $state_arr  = get_term_by( 'id', absint( $state_id ), 'region' );
-    $state      = $state_arr->name;
-    $latlon     = get_term_meta( $term_id, 'nn_region_latlon', true );
-
-    // content-archive
-    $term_region = get_the_terms( $post_id, 'region' );
-    $term_id     = ($term_region) ? $term_region[0]->term_id : false;
-
-    $term_pop  = ( get_term_meta( $term_id, 'nn_region_pop', true ) )
-        ? get_term_meta( $term_id, 'nn_region_pop', true ) : false;
-    $city_pop  = ( $term_pop ) ? ' (<em>Pop.:</em> ' . number_format( floatval( $term_pop ) ) . ')' : '';
-
-    $args_region = array(
-        'format'    => 'id',
-        'separator' => ' / ',
-    );
-    $regions = get_term_parents_list( $term_id, 'region', $args_region ) ;
-
-    // taxonomy-owner
-    $term_city   = get_the_terms( $post_id, 'region' );
-    $city        = ( $term_city && isset( $term_city[0]->name ) ) ? $term_city[0]->name : 'ERROR:city';
-    $city_meta   = ( $term_city && isset( $term_city[0]->term_id ) )
-        ? get_term_meta( $term_city[0]->term_id ) : false;
-    $city_pop    = ( $city_meta && isset( $city_meta['nn_region_pop'][0] ) )
-        ? $city_meta['nn_region_pop'][0] : 0;
-    $city_latlon = ( $city_meta && isset( $city_meta['nn_region_latlon'][0] ) )
-        ? $city_meta['nn_region_latlon'][0] : '';
-    $term_county = ( $term_city && isset( $term_city[0]->parent ) )
-        ? get_term( $term_city[0]->parent ) : false;
-    $county      = ( $term_county && isset( $term_county->name ) ) ? $term_county->name : 'ERROR:county';
-    $term_state  = ( $term_county && isset( $term_county->parent ) )
-        ? get_term( $term_county->parent ) : false;
-    $state       = ( $term_state && isset( $term_state->name ) ) ? $term_state->name : 'ERROR:state';
-
-    // page-data-table-newspapers, page-data-table
-    // Tax terms (and parents for Region: county, state).
-    $term_city   = get_the_terms( $post_id, 'region' );
-    $city        = ( $term_city && isset( $term_city[0]->name ) ) ? $term_city[0]->name : '';
-    $city_meta   = ( $term_city && isset( $term_city[0]->term_id ) )
-        ? get_term_meta( $term_city[0]->term_id ) : false;
-    $city_pop    = ( $city_meta && isset( $city_meta['nn_region_pop'][0] ) )
-        ? $city_meta['nn_region_pop'][0] : 0;
-    $city_latlon = ( $city_meta && isset( $city_meta['nn_region_latlon'][0] ) )
-        ? $city_meta['nn_region_latlon'][0] : '';
-    $term_county = ( $term_city && isset( $term_city[0]->parent ) )
-        ? get_term( $term_city[0]->parent ) : false;
-    $county      = ( $term_county && isset( $term_county->name ) ) ? $term_county->name : '';
-    $term_state  = ( $term_county && isset( $term_county->parent ) )
-        ? get_term( $term_county->parent ) : false;
-    $state       = ( $term_state && isset( $term_state->name ) ) ? $term_state->name : '';
-
-    // page-news-table
-    // Get Region values: city, county and state (tax terms), and city population (term meta).
-    $term_city   = get_the_terms( $post_id, 'region' );
-    $city_meta   = ( $term_city && isset( $term_city[0]->term_id ) )
-        ? get_term_meta( $term_city[0]->term_id ) : false;
-    $city_pop    = ( $city_meta && isset( $city_meta['nn_region_pop'][0] ) )
-        ? $city_meta['nn_region_pop'][0] : 0;
-    $term_county = ( $term_city && isset( $term_city[0]->parent ) )
-        ? get_term( $term_city[0]->parent ) : false;
-    $term_state  = ( $term_county && isset( $term_county->parent ) )
-        ? get_term( $term_county->parent ) : false;
-
-    // page-regions-city, page-regions-county, page-regions
-    $city_data = get_post_meta( 7594, 'nn_cities', true );
-    $counties_data = get_post_meta( 7594, 'nn_counties', true );
-    $states_data = get_post_meta( 7594, 'nn_states', true );
-
-}
-
 
 /**
  * Get data for all Counties in a State (Region taxonomy term parent = State).
@@ -685,13 +636,9 @@ Array
 Changed counties- Kusilvak Census Area, Alaska and Oglala Lakota County, South Dakota, were:
 1564 "GEO_ID": "0500000US02270", "STATE": "02", "COUNTY": "270", "NAME": "Wade Hampton", "LSAD": "CA"
 3894 "GEO_ID": "0500000US46113", "STATE": "46", "COUNTY": "113", "NAME": "Shannon", "LSAD": "County"
-
-Old calcs:
-$circ_per_pop = ( $circ_sum ) ? $circ_sum / $population : 0; // Circ./Pop.
-$pub_per_pop  = ( $county->count ) ? $county->count / ( $population / 10000 ) : 0; // Pub/Pop.-10K.
-'circ_per_pop'   => round( $circ_per_pop, 3 ),
-'pub_per_pop'    => round( $pub_per_pop, 3 ),
 */
+
+
 
 
 /**
