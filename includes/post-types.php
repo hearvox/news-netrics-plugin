@@ -16,7 +16,7 @@
  *
  * @see get_post_type_labels() for label keys.
  */
-function newsstats_custom_post_types() {
+function netrics_custom_post_types() {
     $labels = array(
         'name'               => _x( 'Publications', 'newsnetrics' ),
         'singular_name'      => _x( 'Publication', 'newsnetrics' ),
@@ -51,47 +51,11 @@ function newsstats_custom_post_types() {
 
     register_post_type( 'publication', $args );
 }
-add_action( 'init', 'newsstats_custom_post_types' );
-
- /**
- * Display CPT posts on front page
- *
- */
-function newsstats_home_cpt_posts( $query ) {
-
-    if( $query->is_main_query() && $query->is_home() ) {
-        $query->set( 'post_type', array( 'publication') );
-    }
-}
-// add_action( 'pre_get_posts', 'newsstats_home_cpt_posts' );
-
+add_action( 'init', 'netrics_custom_post_types' );
 
 /*******************************
  =POST META
  ******************************/
-/**
- * Get array of post meta keys (with registration values).
- *
- * Test API:
- * https://news.pubmedia.us/wp-json/wp/v2/publication
- *
- * @return array $pub_meta Array of post meta keys.
- */
-function netrics_get_pub_meta() {
-    $pub_meta = array(
-        'nn_pub_name'      => array( 'News outlet name', 'string', 'sanitize_text_field' ),
-        'nn_pub_site'      => array( 'News outlet domain name', 'string', 'sanitize_text_field' ),
-        'nn_pub_url'       => array( 'News outlet URL', 'string', 'sanitize_text_field' ),
-        'nn_circ'          => array( 'Circulation', 'number', 'absint' ),
-        'nn_rank'          => array( 'AWIS Global Rank', 'number', 'absint' ),
-        'nn_pub_year'      => array( 'Year founded', 'number', 'absint' ),
-        // 'nn_pub_rss'       => array( 'RSS Feed URL', 'string', 'sanitize_text_field' ),
-        // 'nn_site'          => array( 'Site data from AWIS, BuitWith', 'string', 'wp_json_encode' ),
-    );
-
-    return $pub_meta;
-}
-
 /**
  * Register term meta for taxonomies.
  *
@@ -116,4 +80,26 @@ function newsstats_reg_pub_meta() {
 }
 add_action( 'init', 'newsstats_reg_pub_meta', 0 );
 
+/**
+ * Get array of post meta keys (with registration values).
+ *
+ * Test API:
+ * https://news.pubmedia.us/wp-json/wp/v2/publication
+ *
+ * @return array $pub_meta Array of post meta keys.
+ */
+function netrics_get_pub_meta() {
+    $pub_meta = array(
+        'nn_pub_name'      => array( 'News outlet name', 'string', 'sanitize_text_field' ),
+        'nn_pub_site'      => array( 'News outlet domain name', 'string', 'sanitize_text_field' ),
+        'nn_pub_url'       => array( 'News outlet URL', 'string', 'sanitize_text_field' ),
+        'nn_circ'          => array( 'Circulation', 'number', 'absint' ),
+        'nn_rank'          => array( 'AWIS Global Rank', 'number', 'absint' ),
+        'nn_pub_year'      => array( 'Year founded', 'number', 'absint' ),
+        // 'nn_pub_rss'       => array( 'RSS Feed URL', 'string', 'sanitize_text_field' ),
+        // 'nn_site'          => array( 'Site data from AWIS, BuitWith', 'string', 'wp_json_encode' ),
+    );
+
+    return $pub_meta;
+}
 
