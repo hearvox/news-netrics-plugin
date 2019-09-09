@@ -175,82 +175,9 @@ function netrics_sanitize_data( $data = array() ) {
     return $data_clean;
 }
 
-/**
- * Sanitizes values in an one-dimensional array.
- * (Used by post meta-box form before writing post-meta to database.)
- *
- * @link https://tommcfarlin.com/input-sanitization-with-the-wordpress-settings-api/
- *
- * @since    0.4.0
- *
- * @param    array    $input        The address input.
- * @return   array    $input_clean  The sanitized input.
- */
-function netrics_sanitize_array( $input ) {
-    // Initialize a new array to hold the sanitized values.
-    $input_clean = array();
-
-    // Traverse the array and sanitize each value.
-    foreach ( $input as $key => $val ) {
-        $input_clean[ $key ] = sanitize_text_field( $val );
-    }
-
-    return $input_clean;
-}
-
-function netrics_remove_empty_lines( $string ) {
-    return preg_replace( "/(^[\r\n]*|[\r\n]+)[\s\t]*[\r\n]+/", "\n", $string );
-    // preg_replace( '/^\h*\v+/m', '', $string );
-}
-
-function netrics_object_to_array($d) {
-        if (is_object($d))
-            $d = get_object_vars($d);
-
-        return is_array($d) ? array_map(__FUNCTION__, $d) : $d;
-}
-
-
 /* ------------------------------------------------------------------------ *
  * Functions to check values.
  * ------------------------------------------------------------------------ */
-/**
- * Checks if URL exists. (Not used yet.)
- * @todo Add status code as tax-meta upon settings wp_insert_term.
- *
- * @since   0.1.0
- *
- * @param  $url         URL to be checked.
- * @return int|string   URL Sstatus repsonse code number, or WP error on failure.
- */
-function netrics_url_exists( $url = '' ) {
-    // Make absolute URLs for WP core scripts (from their registered relative 'src' URLs)
-    if ( substr( $url, 0, 13 ) === '/wp-includes/' || substr( $url, 0, 10 ) === '/wp-admin/' ) {
-        $url = get_bloginfo( 'wpurl' ) . $url;
-    }
-
-    // Make protocol-relative URLs absolute  (i.e., from "//example.com" to "https://example.com" )
-    if ( substr( $url, 0, 2 ) === '//' ) {
-        $url = 'https:' . $url;
-    }
-
-    if ( has_filter( 'netrics_url_exists' ) ) {
-        $url = apply_filters( 'netrics_url_exists', $url );
-    }
-
-    // Sanitize
-    $url = esc_url_raw( $url );
-
-    // Get URL header
-    $response = wp_remote_head( $url );
-    if ( is_wp_error( $response ) ) {
-        return 'Error: ' . is_wp_error( $response );
-    }
-
-    // Request success, return header response code
-    return wp_remote_retrieve_response_code( $response );
-}
-
 /**
  * Check URL syntax.
  *
@@ -265,116 +192,6 @@ function netrics_validate_url( $url ) {
     } else {
         return new WP_Error( 'url_invalid', __( "URL does not validate." ) );
     }
-}
-
-/**
- * Checks if array item index exists and holds a non-empty value.
- *
- * @since   0.1.0
- *
- * @param  $value   Array item key (e.g., $arr['key'][0]).
- * @return $value   Array item key's value, or false on failure.
- */
-function newsstats_check_val( $value ) {
-    if ( isset( $value ) && 0 < strlen( trim( $value ) ) ) {
-        return $value;
-    } else {
-        return false;
-    }
-}
-
-/* Test action */
-function echo_yo() {
-    echo '<h2>yo yo yo yo</h2>';
-}
-add_action( 'test_action', 'echo_yo' );
-
-
-/* Check value */
-function yono( $val ) {
-    $yono = ( $val ) ? 'yo' : 'no';
-    return $yono;
-}
-
-
-function netrics_get_csv_data( $csv ) {
-    // home/wp_wugkzz/news.pubmedia.us/wp-content/plugins/news-netrics/import/us-census-2018-county-wp.csv
-    echo $exists = ( file_exists( $csv ) ) ? $csv . "\n" : "N'existe pas.\n";
-    $csv_array = array();
-    if ( ( $handle = fopen( $csv, 'r' ) ) !== FALSE ) {
-        $csv_array = array_map( 'str_getcsv', file( $csv ) );
-        fclose($handle);
-    } else {
-        echo 'Did not open.';
-    }
-    return $csv_array;
-}
-
-/*******************************
- =STATISTICS
- ******************************/
-/* ------------------------------------------------------------------------ *
- * Display array evaluations
- * ------------------------------------------------------------------------ */
-
-/**
- * Outputs HTML with array averages, quartiles, and standard deviations.
- *
- */
-function nstats_array_eval( $array ) {
-    ?>
-<table class="tabular" style="">
-    <tbody>
-        <tr>
-            <th scope="row"><?php esc_attr_e( 'Mean&nbsp;', 'statsclass' ); ?></th>
-            <td><?php echo number_format( nstats_mean( $array ), 2, '.', ',' ); ?></td>
-        </tr>
-        <tr>
-            <th scope="row"><?php esc_attr_e( 'Maximum&nbsp;', 'statsclass' ); ?></th>
-            <td><?php echo number_format( nstats_max( $array ), 2, '.', ',' ); ?></td>
-        </tr>
-        <tr>
-            <th scope="row"><?php esc_attr_e( 'Minimum&nbsp;', 'statsclass' ); ?></th>
-            <td><?php echo number_format( nstats_min( $array ), 2, '.', ',' ); ?></td>
-        </tr>
-        <tr>
-            <th scope="row"><?php esc_attr_e( 'Range&nbsp;', 'statsclass' ); ?></th>
-            <td><?php echo number_format( nstats_range( $array ), 2, '.', ',' ); ?></td>
-        </tr>
-        <tr>
-            <th scope="col"><?php esc_attr_e( 'Quartile 1&nbsp;', 'statsclass' ); ?></th>
-            <td><?php echo number_format( nstats_q1( $array ), 2, '.', ',' ); ?></td>
-        </tr>
-        <tr>
-            <th scope="col"><?php esc_attr_e( 'Q2/Median&nbsp;', 'statsclass' ); ?></th>
-            <td><?php echo number_format( nstats_q2( $array ), 2, '.', ',' ); ?></td>
-        </tr>
-        <tr>
-            <th scope="col"><?php esc_attr_e( 'Quartile 3&nbsp;', 'statsclass' ); ?></th>
-            <td><?php echo number_format( nstats_q3( $array ), 2, '.', ',' ); ?></td>
-        </tr>
-        <tr>
-            <th scope="col"><?php esc_attr_e( 'Interquartile Range&nbsp;', 'statsclass' ); ?></th>
-            <td><?php echo number_format( nstats_iqr( $array ), 2, '.', ',' ); ?></td>
-        </tr>
-        <tr>
-            <th scope="col"><?php esc_attr_e( 'Standard Deviation&nbsp;', 'statsclass' ); ?></th>
-            <td><?php echo number_format( nstats_sd( $array ), 2, '.', ',' ); ?></td>
-        </tr>
-        <tr>
-            <th scope="col"><?php esc_attr_e( 'SD Population&nbsp;', 'statsclass' ); ?></th>
-             <td><?php echo number_format( nstats_sd_pop( $array ), 2, '.', ',' ); ?></td>
-        </tr>
-    </tbody>
-    <tfoot>
-        <tr>
-            <th scope="row"><?php esc_attr_e( 'Count&nbsp;', 'statsclass' ); ?></th>
-            <td><?php echo number_format( count( $array ) ); ?></td>
-        </tr>
-    </tfoot>
-</table>
-
-   <?php
 }
 
 
@@ -399,7 +216,9 @@ function netrics_filemod_vers( $path ) {
     return $vers;
 }
 
-
+/* ------------------------------------------------------------------------ *
+ * Filters for navigation
+ * ------------------------------------------------------------------------ */
 /* Multiple select drop-down of taxonomy terms */
 // http://wordpress.stackexchange.com/questions/107044/error-sending-array-of-inputs
 function get_terms_multi_select( $tax, $args = array(), $rows = 10 ) {
@@ -435,6 +254,9 @@ function get_terms_multi_select( $tax, $args = array(), $rows = 10 ) {
     }
 }
 
+/*******************************
+ =STATISTICS
+ ******************************/
 /* ------------------------------------------------------------------------ *
  * Basic Calculations
  * ------------------------------------------------------------------------ */
@@ -500,7 +322,6 @@ function nstats_median( $array ) {
 /* ------------------------------------------------------------------------ *
  * Quantiles: Quartiles, Percentile
  * ------------------------------------------------------------------------ */
-
 /**
  * Calculate Quartiles
  *
