@@ -252,6 +252,22 @@ function netrics_url_exists( $url = '' ) {
 }
 
 /**
+ * Check URL syntax.
+ *
+ * @since   0.1.0
+ *
+ * @param int $post_id Post ID.
+ * @return string $url Post meta value
+ */
+function netrics_validate_url( $url ) {
+    if ( wp_http_validate_url( $url ) ) {
+        return $url;
+    } else {
+        return new WP_Error( 'url_invalid', __( "URL does not validate." ) );
+    }
+}
+
+/**
  * Checks if array item index exists and holds a non-empty value.
  *
  * @since   0.1.0

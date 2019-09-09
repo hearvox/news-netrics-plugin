@@ -168,22 +168,6 @@ function newsstats_get_pub_posts( $per_page = 100, $offset = 0 ) {
     return $query ;
 }
 
-/**
- * Check URL syntax.
- *
- * @since   0.1.0
- *
- * @param int $post_id Post ID.
- * @return string $url Post meta value
- */
-function netrics_validate_url( $url ) {
-    if ( wp_http_validate_url( $url ) ) {
-        return $url;
-    } else {
-        return new WP_Error( 'url_invalid', __( "URL does not validate." ) );
-    }
-}
-
 /* ------------------------------------------------------------------------ *
  * API Calls
  * ------------------------------------------------------------------------ */
