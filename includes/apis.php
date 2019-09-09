@@ -33,37 +33,6 @@ function netrics_get_pubs_ids( $per_page = 100, $offset = 0, $fields = 'ids' ) {
 }
 
 /**
- * Get CPT posts (Publication)
- *
- * @since   0.1.0
- *
- * @param  int    $per_page  The number of post to return.
- * @param  int    $offset    The starting point in array.
- * @return array  $query     Array of WP Post objects.
- */
-function netrics_get_pubs_tax_ids( $per_page = 100, $offset = 0, $fields = 'ids', $flag = '201908' ) {
-    $args = array(
-        'post_type' => 'publication',
-        'orderby'   => 'title',
-        'order'     => 'ASC',
-        'tax_query' => array(
-            // 'relation'  => 'AND',
-            array(
-                'taxonomy' => 'flag',
-                'field'    => 'slug',
-                'terms'    => $flag,
-            ),
-        ),
-        'fields'         => $fields,
-        'posts_per_page' => $per_page,
-        'offset'         => $offset,
-    );
-    $query = new WP_Query( $args );
-
-    return $query ;
-}
-
-/**
  * Add an dated error message to post meta, with name of function that threw error.
  *
  * @since   0.1.0
@@ -158,28 +127,6 @@ function netrics_curl( $url ) {
  * Publication (CPT)
  * ------------------------------------------------------------------------ */
 /**
- * Get all CPT posts (Publication).
- *
- * @since   0.1.0
- *
- * @param  int    $per_page  The number of post to return.
- * @param  int    $offset    The starting point in array.
- * @return array  $query     Array of WP Post objects.
- */
-function netrics_get_pub_posts( $per_page = 100, $offset = 0 ) {
-    $args = array(
-        'post_type' => 'publication',
-        'orderby'   => 'title',
-        'order'     => 'ASC',
-        'posts_per_page' => $per_page,
-        'offset'         => $offset,
-    );
-    $query = new WP_Query( $args );
-
-    return $query ;
-}
-
-/**
  * Get article items from post meta.
  *
  * @since   0.1.0
@@ -241,40 +188,6 @@ function netrics_validate_url( $url ) {
  * API Calls
  * ------------------------------------------------------------------------ */
 /**
- * Make API calls for domain data; store in post meta.
- *
- * @since   0.1.0
- *
- * @param int    $post_id  Post ID (required).
- * @param string $api      API service (AWIS or BuiltWith).
- * @param string $api_key  API key required for BuiltWith.
- *
- * @return void
- */
-function netrics_api_calls( $query, $api = 'awis', $api_key = '' ) {
-    if ( ! isset( $query->posts ) ) {
-        $query = newsstats_get_pub_posts();
-    }
-
-    switch ( $api ) {
-        case 'awis': // Alexa Web Information Service (Amazon).
-            require_once( plugin_dir_path( __FILE__ ) . 'api/awis.php' );
-            foreach ( $query->posts as $post ) {
-                netrics_api_save_awis( $post );
-            }
-            break;
-        case 'bw': // BuiltWith
-            require_once( plugin_dir_path( __FILE__ ) . 'api/builtwith.php' );
-            foreach ( $query->posts as $post ) {
-                netrics_api_save_builtwith( $post, $api_key );
-            }
-            break;
-        default:
-            break;
-    }
-}
-
-/**
  * Set month to use for API calls.
  *
  * @since   0.1.1
@@ -335,6 +248,8 @@ function netrics_api_call_pagespeed_url( $url, $strategy = 'mobile' ) {
 /**
  * Get AWIS data for domain via API call.
  *
+ * For newly added publications or yearly AWIS data updates.
+ *
  * @since   0.1.1
  *
  * @todo Log data to file.
@@ -390,6 +305,8 @@ function netrics_get_awis_meta( $post_id ) {
  * ------------------------------------------------------------------------ */
 /**
  * Get BuiltWith data for domain via API call.
+ *
+ * For newly added publications or yearly BuiltWith data updates.
  *
  * @since   0.1.1
  *
