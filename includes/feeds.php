@@ -31,7 +31,7 @@ function netrics_get_feeds( $query ) {
             continue;
         }
 
-        $xml = newsstats_request_data( $url );
+        $xml = netrics_request_data( $url );
         if ( ! $xml ) {
             netrics_error( $post_id, 'nn_get_feeds>xml' );
             continue;
@@ -241,7 +241,7 @@ function netrics_save_feed_items( $post_id, $items, $meta_key = 'nn_articles_201
  */
 function netrics_parse_json_items( $post_id ) {
     $url   = get_post_meta( $post_id, 'nn_pub_rss', true ); // RSS file
-    $json  = newsstats_request_data( $url );
+    $json  = netrics_request_data( $url );
     $posts = explode( '"post",', $json );
 
     if ( is_array( $posts ) && count( $posts ) > 1 ) {
@@ -348,7 +348,7 @@ function newsstats_get_rss_url( $post_id ) {
  */
 function newsstats_get_xml( $url ) {
 
-    $body   = newsstats_request_data( $url );
+    $body   = netrics_request_data( $url );
     $xml    = '';
 
     libxml_use_internal_errors( true );
@@ -497,7 +497,7 @@ function newsstats_save_json_articles( $post_id ) {
  */
 function newsstats_parse_feed( $url ) {
 
-    $body     = newsstats_request_data( $url );
+    $body     = netrics_request_data( $url );
     $articles = array();
     $items = array( 'Error: failed newsstats_parse_feed()' );
 

@@ -91,7 +91,7 @@ function netrics_error( $post_id, $error ) {
  * @params  $url  The URL of the feed to retrieve.
  * @returns $response  The response from the URL; null if empty.
  */
-function newsstats_request_data( $url, $timeout = 10 ) {
+function netrics_request_data( $url, $timeout = 10 ) {
 
     $response = null;
     $args     = array(
@@ -108,7 +108,7 @@ function newsstats_request_data( $url, $timeout = 10 ) {
         if( false == $response ) {
 
             // And if that doesn't work, then we'll try curl
-            $response = newsstats_curl( $url );
+            $response = netrics_curl( $url );
             if( null == $response ) {
                 $response = 0;
             } // end if/else
@@ -135,7 +135,7 @@ function newsstats_request_data( $url, $timeout = 10 ) {
  * @param  string  $url        To URL to which the request is being made
  * @return string  $response   The response, if available; otherwise, null
  */
-function newsstats_curl( $url ) {
+function netrics_curl( $url ) {
 
     $curl = curl_init( $url );
 
@@ -432,7 +432,7 @@ function netrics_veracity_id( $post_id, $set = 1 ) {
     $domain  = get_post_meta( $post_id, 'nn_pub_site', true );
     $api_url    = 'https://' . $api_key . ':' . $api_secret . $api . $domain;
 
-    $json = newsstats_request_data( $api_url );
+    $json = netrics_request_data( $api_url );
     $data = json_decode( $json );
     $pk   = $data->response[0]->pk ?? 0;
     if ( $set ) {
@@ -463,7 +463,7 @@ function netrics_get_veracity_articles( $post_id, $set = 1 ) {
     $pk         = get_post_meta( $post_id, 'nn_veracity', true );
     $api_url    = 'https://' . $api_key . ':' . $api_secret . $api . $pk;
 
-    $json = newsstats_request_data( $api_url );
+    $json = netrics_request_data( $api_url );
     $data = json_decode( $json );
     // $pk   = $data->response[0]->pk ?? 0;
     if ( $set ) {

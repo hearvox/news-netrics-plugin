@@ -53,9 +53,11 @@ define( 'NEWSNETRICS_DIR', trailingslashit( plugin_dir_path( __FILE__ ) ) );
 define( 'NEWSNETRICS_URL', trailingslashit( plugin_dir_url( __FILE__ ) ) );
 
 /**
- * Adds "Settings" link on plugin page (next to "Activate").
+ * Adds "Settings" link on Plugin admin page (next to "Activate").
+ *
+ * @param string[] $links An array of plugin action links, e.g., 'activate', 'deactivate'.
+ * @return string[] $links Edited array of action links.
  */
-//
 function netrics_plugin_settings_link( $links ) {
   $settings_link = '<a href="' . esc_url( admin_url( 'options-general.php?page=newsnetrics' ) ) . '">' . __( 'Settings', 'newsnetrics' ) . '</a>';
   array_unshift( $links, $settings_link );
