@@ -8,6 +8,9 @@
  * @subpackage news-netrics/includes
  */
 
+/* ------------------------------------------------------------------------ *
+ * HTML Tables
+ * ------------------------------------------------------------------------ */
 /**
  * Outputs HTML table head and body with array averages and medians.
  *
@@ -147,8 +150,6 @@ function netrics_pagespeed( $array ) {
 
    <?php
 }
-
-
 
 /**
  * Outputs HTML with array averages, quartiles, and standard deviations.
@@ -325,6 +326,9 @@ function netrics_pagespeed_corr( $array ) {
    <?php
 }
 
+/* ------------------------------------------------------------------------ *
+ * PageSpeed Insights results
+ * ------------------------------------------------------------------------ */
 /**
  * Get PageSpeed averages for all articles of a Publication with results.
  *
