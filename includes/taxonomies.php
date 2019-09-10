@@ -8,7 +8,6 @@
  * @subpackage news-netrics/includes
  */
 
-
 /*******************************
  =REGISTER TAXONOMIES
  ******************************/
@@ -156,42 +155,6 @@ function newsstats_taxonomies() {
         'show_admin_column' => true,
     );
     register_taxonomy( 'cms', array( 'post', 'publication' ), $args );
-
-    unset( $args );
-    unset( $labels );
-
-    $labels = array(
-        'name'                       => _x( 'Server', 'taxonomy general name', 'newsnetrics' ),
-        'singular_name'              => _x( 'Server', 'taxonomy singular name', 'newsnetrics' ),
-        'search_items'               => __( 'Search Servers', 'newsnetrics' ),
-        'all_items'                  => __( 'All Servers', 'newsnetrics' ),
-        'popular_items'              => __( 'Popular Servers', 'newsnetrics' ),
-        'edit_item'                  => __( 'Edit Server', 'newsnetrics' ),
-        'view_item'                  => __( 'View Server', 'newsnetrics' ),
-        'update_item'                => __( 'Update Server', 'newsnetrics' ),
-        'add_new_item'               => __( 'Add New Server', 'newsnetrics' ),
-        'new_item_name'              => __( 'New Server Name', 'newsnetrics' ),
-        'separate_items_with_commas' => __( 'Separate Servers with commas', 'newsnetrics' ),
-        'add_or_remove_items'        => __( 'Add or remove Servers', 'newsnetrics' ),
-        'choose_from_most_used'      => __( 'Choose from the most used Servers', 'newsnetrics' ),
-        'not_found'                  => __( 'No Servers found', 'newsnetrics' ),
-        'no_terms'                   => __( 'No Servers', 'newsnetrics' ),
-        'items_list_navigation'      => __( 'Server list navigation', 'newsnetrics' ),
-        'items_list'                 => __( 'Server list', 'newsnetrics' ),
-        'most_used'                  => _x( 'Most Used', 'newsnetrics' ),
-        'back_to_items'              => __( '&larr; Back to Servers', 'newsnetrics' ),
-    );
-
-    $args = array(
-        'labels'            => $labels,
-        'description'       => __( 'Web server', 'newsnetrics' ),
-        'public'            => true,
-        'hierarchical'      => false,
-        'show_in_rest'      => true,
-        'show_admin_column' => true,
-    );
-
-    register_taxonomy( 'server', array( 'post', 'publication' ), $args );
 }
 add_action( 'init', 'newsstats_taxonomies', 0 );
 
