@@ -245,8 +245,8 @@ Array
  * @todo Fn: Reset, delete_transient( string $transient );
  * @since   0.1.0
  *
- * @param int $post_id Post ID.
- * @return array $post_data Array of data for a CPT-post.
+ * @param  int   $post_id    Post ID.
+ * @return array $post_data  Array of data for a CPT-post.
  */
 function newsstats_get_pub( $post_id ) {
     if ( get_post_type( $post_id ) == 'publication' ) {
@@ -345,16 +345,15 @@ function newsstats_get_pub_data() {
 
 
 /**
- * Get
+ * Increment artcile number when running PSI test.
  *
  * array( 'index' => 0, 'strategy- => 'mobile' )
  *
  * @since   0.1.0
  *
- * @return array $pub_data Array of data for all CPT posts.
+ * @return array $controls Array of PSI test settings.
  */
 function newsnetrics_pagespeed_controls() {
-
     $controls = get_transient( 'newsnetrics_batch_controls' );
 
     if ( $controls ) { // Increment index, or, after 3 articles, reset index and change strategy.
@@ -383,12 +382,12 @@ function newsnetrics_pagespeed_controls() {
  =STATISTICS (Site-wide data arrays for all Publications)
  ******************************/
 /**
- * Get
+ * Get PSI data. (Not currently used.)
  *
  *
  * @since   0.1.0
  *
- * @return array $pub_data Array of data for all CPT posts.
+ * @return array $pubs_data Array of data for all CPT posts.
  */
 function newsstats_get_pubs_pagespeed() {
     $pubs_data = get_transient( 'newsnetrics_pagespeed' );
@@ -403,12 +402,12 @@ function newsstats_get_pubs_pagespeed() {
 }
 
 /**
- * Get
+ * Get PSI averages. (Not currently used.)
  *
  *
  * @since   0.1.0
  *
- * @return array $pub_data Array of data for all CPT posts.
+ * @return array $pubs_data Array of data for all CPT posts.
  */
 function newsstats_set_pagespeed_avgs() {
     $pubs_data = array();
@@ -438,12 +437,12 @@ function newsstats_set_pagespeed_avgs() {
 }
 
 /**
- * Get
+ * Get PSI results. (Not currently used.)
  *
  *
  * @since   0.1.0
  *
- * @return array $pub_data Array of data for all CPT posts.
+ * @return array $pubs_data Array of data for all CPT posts.
  */
 function newsstats_set_pubs_pagespeed() {
     $pubs_data = array();
@@ -478,12 +477,12 @@ function newsstats_set_pubs_pagespeed() {
 
 
 /**
- * Get
+ * Get PSI results. (Not currently used.)
  *
  *
  * @since   0.1.0
  *
- * @return array $pub_data Array of data for all CPT posts.
+ * @return array $pubs_data Array of data for all CPT posts.
  */
 function netrics_get_pubs_pagespeed_query( $query = array() ) {
     if ( ! isset( $query->posts ) ) {
@@ -525,7 +524,7 @@ function netrics_get_pubs_pagespeed_query( $query = array() ) {
  *
  * @since   0.1.0
  *
- * @return array $pub_data Array of data for all CPT posts.
+ * @return array $query_rand Array of random WP Post objects.
  */
 function netrics_test_pubs() {
     $args = array(

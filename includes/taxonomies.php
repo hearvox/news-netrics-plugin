@@ -200,7 +200,7 @@ function newsstats_reg_term_meta() {
  * @param string $taxonomy The taxonomy slug.
  * @return void
  */
-function newsstats_region_add_form_fields( $tax_meta ) {
+function newsstats_region_add_form_fields( $taxonomy ) {
     global $nn_region_meta;
     // wp_nonce_field( basename( __FILE__ ), 'newsstats_region_nonce' );
     foreach ( $nn_region_meta as $key => $value ) {
@@ -319,17 +319,16 @@ function netrics_get_city_meta( $post_id ) {
 /**
  * Get data for all States (Region taxonomy term parent = 0).
  *
- * Date includes Population, total Circulation, Counties (with and w/o Publications).
+ * Data includes Population, total Circulation, Counties (with and w/o Publications).
  *
  * Save as post meta in 'region' Page (ID: 7594):
  * https://news.pubmedia.us/region/
  *
  * @since   0.1.0
  *
- * @param bool $set      Save data in post meta.
- * @param int  $post_id  Default Post ID of Page for post meta.
- *
- * @return array $state_data Array of data for all Region: States.
+ * @param  bool   $set         Save data in post meta.
+ * @param  int    $page_id     Default ID of Page with required post meta.
+ * @return array  $state_data  Array of data for all Region: States.
  */
 function netrics_get_region_data( $set = 1, $page_id = 7594 ) {
     $state_data   = array();
@@ -431,10 +430,9 @@ function netrics_get_region_data( $set = 1, $page_id = 7594 ) {
  *
  * @since   0.1.0
  *
- * @param bool $set      Save data in post meta.
- * @param int  $post_id  Default Post ID of Page for post meta.
- *
- * @return array $county_data Array of data for all Region: States > Counties.
+ * @param  bool  $set          Save data in post meta.
+ * @param  int   $page_id      Default ID of Page with required post meta.
+ * @return array $county_data  Array of data for all Region: States > Counties.
  */
 function netrics_get_county_data( $set = 1, $page_id = 7594 ) {
     $terms_county = array();
@@ -519,17 +517,14 @@ Papers in Counties:
 /**
  * Write county data to a JSON file (for maps and visualizations).
  *
- * Date includes Population, total Circulation.
+ * Data includes Population, total Circulation.
  *
  * Get data from post meta in 'region' Page (ID: 7594):
  * https://news.pubmedia.us/region/
  *
  * @since   0.1.0
  *
- * @param bool $set      Save data in post meta.
- * @param int  $post_id  Default Post ID of Page for post meta.
- *
- * @return array $county_data Array of data for all Region: States > Counties.
+ * @return array $write_data JSON of Pulblications data.
  */
 function netrics_write_county_data() {
     $file_path   = '/home/wp_wugkzz/news.pubmedia.us/tests/geo/data/us-census-2018-county.js';
@@ -613,10 +608,9 @@ Changed counties- Kusilvak Census Area, Alaska and Oglala Lakota County, South D
  *
  * @since   0.1.0
  *
- * @param bool $set      Save data in post meta.
- * @param int  $post_id  Default Post ID of Page for post meta.
- *
- * @return array $county_data Array of data for all Region: States > Counties.
+ * @param  bool  $set        Save data in post meta.
+ * @param  int   $page_id    Default ID of Page with required post meta.
+ * @return array $city_data  Array of data for all Region: States > Counties> Cities.
  */
 function netrics_get_city_data( $set = 1, $page_id = 7594 ) {
     $terms_city  = array();
@@ -679,10 +673,10 @@ function netrics_get_city_data( $set = 1, $page_id = 7594 ) {
 /**
  * Get terms for all States (Region taxonomy term parent = 0).
  *
- *
  * @since   0.1.0
  *
- * @return array $state_data Array of data for all Region: States.
+ * @param  array $state_data  (Optional) Array of state data.
+ * @return array $usa_totals  Array of data for all Region: States.
  */
 function netrics_get_state_totals( $state_data = array() ) {
     if ( ! $state_data ) {
@@ -783,6 +777,7 @@ function netrics_get_county_terms( $state_id ) {
  *
  * @since   0.1.0
  *
+ * @param  int   $term_id    (Required) ID of state taxonomy term.
  * @return array $state_data Array of data for all Region: States.
  */
 function netrics_get_region_pubs( $term_id ) {
