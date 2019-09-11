@@ -272,7 +272,6 @@ function netrics_add_sortable_admin_columns( $columns ) {
 }
 // add_filter( 'manage_edit-publication_sortable_columns', 'netrics_add_sortable_admin_columns' );
 
-
 /*******************************
  =DATA (stored in Page post meta)
  ******************************/

@@ -37,8 +37,8 @@ function netrics_get_pubs_ids( $per_page = 100, $offset = 0, $fields = 'ids' ) {
  *
  * @since   0.1.0
  *
- * @param string $post_id Post ID.
- * @return string $url Post meta value
+ * @param  string $post_id  Post ID.
+ * @return string $url      Post meta value
  */
 function netrics_error( $post_id, $error ) {
     if ( ! $post_id || ! $error ) {
@@ -55,10 +55,11 @@ function netrics_error( $post_id, $error ) {
 /**
  * Retrieves the response from the specified URL using one of PHP's outbound request facilities.
  *
- * @link https://tommcfarlin.com/wp_remote_get/ Code author
+ * @link https://tommcfarlin.com/wp_remote_get/
  *
- * @params  $url  The URL of the feed to retrieve.
- * @returns $response  The response from the URL; null if empty.
+ * @param  string $url       The URL of the feed to retrieve.
+ * @param  int    $timeout   Number of seconds to try before closing connection.
+ * @return array  $response  The response from the URL; null if empty.
  */
 function netrics_request_data( $url, $timeout = 10 ) {
 
@@ -101,8 +102,8 @@ function netrics_request_data( $url, $timeout = 10 ) {
  *
  * @link https://tommcfarlin.com/wp_remote_get/ Code author
  *
- * @param  string  $url        To URL to which the request is being made
- * @return string  $response   The response, if available; otherwise, null
+ * @param  string $url       To URL to which the request is being made
+ * @return string $response  The response, if available; otherwise, null
  */
 function netrics_curl( $url ) {
 
@@ -131,8 +132,9 @@ function netrics_curl( $url ) {
  *
  * @since   0.1.0
  *
- * @param int $post_id Post ID.
- * @return string $url Post meta value
+ * @param  int    $post_id  Post ID.
+ * @param  string $key      Post meta key with article URLs..
+ * @return string $items    Article URLs (and titles).
  */
 function netrics_get_pub_items( $post_id, $key = '' ) {
     $meta_key = ( $key ) ? $key : 'nn_articles_' . netrics_get_data_month();
@@ -151,9 +153,9 @@ function netrics_get_pub_items( $post_id, $key = '' ) {
  *
  * @since   0.1.0
  *
- * @param  int    $per_page  The number of post to return.
- * @param  int    $offset    The starting point in array.
- * @return array  $query     Array of WP Post objects.
+ * @param  int   $per_page  The number of post to return.
+ * @param  int   $offset    The starting point in array.
+ * @return array $query     Array of WP Post objects.
  */
 function newsstats_get_pub_posts( $per_page = 100, $offset = 0 ) {
     $args = array(
@@ -176,7 +178,7 @@ function newsstats_get_pub_posts( $per_page = 100, $offset = 0 ) {
  *
  * @since   0.1.1
  *
- * @return
+ * @return string Month in format YYYYMM.
  */
 function netrics_get_data_month() {
     // return date( 'Ym' );
@@ -193,8 +195,9 @@ function netrics_get_data_month() {
  *
  * @todo Log data to file.
  *
- * @param  int  $post_id Post ID.
- * @return array  $alexa  Data from Alexa.
+ * @param  array  $query_ids  Array of Post IDs.
+ * @param  string $strategy   PSI test: 'mobile' or 'desktop'.
+ * @return array  $psi_data   Array of (selected) PSI test results.
  */
 function netrics_api_call_pagespeed( $query_ids, $strategy = 'mobile' ) {
     // PSI file with API call.
@@ -214,8 +217,8 @@ function netrics_api_call_pagespeed( $query_ids, $strategy = 'mobile' ) {
  *
  * @todo Log data to file.
  *
- * @param  int  $post_id Post ID.
- * @return array  $alexa  Data from Alexa.
+ * @param  sting $url       URL of site to PSI test.
+ * @return array $psi_data  Array of (selected) PSI test results.
  */
 function netrics_api_call_pagespeed_url( $url, $strategy = 'mobile' ) {
     // PSI file with API call.
@@ -238,8 +241,8 @@ function netrics_api_call_pagespeed_url( $url, $strategy = 'mobile' ) {
  *
  * @todo Log data to file.
  *
- * @param  int  $post_id Post ID.
- * @return array  $alexa  Data from Alexa.
+ * @param  int   $post_id  Post ID.
+ * @return array $awis     Array of (selected) AWIS site data.
  */
 function netrics_api_call_awis( $post_id ) {
     // Alexa script (New Netrics customized) and API keys
@@ -257,9 +260,8 @@ function netrics_api_call_awis( $post_id ) {
  *
  * @since   0.1.1
  *
- * @param int $post_id  Default Post ID of Page for post meta.
- *
- * @return array $awis  Array of AWIS data.
+ * @param  int   $post_id  Default Post ID of Page for post meta.
+ * @return array $awis     Array of (selected) AWIS site data.
  */
 function netrics_get_awis_meta( $post_id ) {
     $nn_site = get_post_meta( $post_id , 'nn_site' ); // Returns unserialized array.
@@ -296,8 +298,8 @@ function netrics_get_awis_meta( $post_id ) {
  *
  * @todo Log data to file.
  *
- * @param  int  $post_id Post ID.
- * @return array  $alexa  Data from Alexa.
+ * @param  int   $post_id  Post ID.
+ * @return array $bw_data  Array of (selected) BuiltWith site data..
  */
 function netrics_api_call_builtwith( $post_id, $api_key ) {
     // Alexa script (New Netrics customized) and API keys

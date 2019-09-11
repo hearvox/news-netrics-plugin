@@ -68,7 +68,7 @@ add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), 'netrics_plugi
 /**
  * Redirect to Settings screen upon plugin activation.
  *
- * @param  string $plugin Plugin basename (e.g., "my-plugin/my-plugin.php")
+ * @param  string $plugin Plugin basename ("news-netrics/news-netrics.php")
  * @return void
  */
 function netrics_activation_redirect( $plugin ) {

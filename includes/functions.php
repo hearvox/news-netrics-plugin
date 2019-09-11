@@ -132,6 +132,8 @@ function netrics_set_option( $option, $value ) {
     $options[$option] = $value;
 
     netrics_set_options( $options );
+
+    return $options;
 }
 
 /**
@@ -144,8 +146,8 @@ function netrics_set_option( $option, $value ) {
  *
  * @since    0.4.0
  *
- * @param    array    $input        The address input.
- * @return   array    $input_clean  The sanitized input.
+ * @param    array    $data        The input.
+ * @return   array    $data_clean  The sanitized input.
  */
 function netrics_sanitize_data( $data = array() ) {
     // Initialize a new array to hold the sanitized values.
@@ -183,8 +185,8 @@ function netrics_sanitize_data( $data = array() ) {
  *
  * @since   0.1.0
  *
- * @param int $post_id Post ID.
- * @return string $url Post meta value
+ * @param string $url URL to validate.
+ * @return string $url URL< if vaid, otherwise WP Error.
  */
 function netrics_validate_url( $url ) {
     if ( wp_http_validate_url( $url ) ) {
@@ -266,7 +268,9 @@ function get_terms_multi_select( $tax, $args = array(), $rows = 10 ) {
  *
  *
  * @since    0.1.0
- * @param float $num1 Number
+ * @param float $num1 First number to compare.
+ * @param float $num1 Second number to compare.
+ * @return float $percent_change Percentage change from first to second number.
  */
 function nstats_percent_change( $num1, $num2 ) {
     $percent_change = ( ( $num2 - $num1 ) / $num1 ) * 100;

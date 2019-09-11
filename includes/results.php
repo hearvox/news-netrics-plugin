@@ -332,8 +332,9 @@ function netrics_pagespeed_corr( $array ) {
 /**
  * Get PageSpeed averages for all articles of a Publication with results.
  *
- * @param  int   $post_id  ID of a post.
- * @return array $pub_ps   Array of PageSpeed averages.
+ * @param  int    $post_id  ID of a post.
+ * @param  string $date     Month of PSI tests (YYYY-MM).
+ * @return array  $site_ps  Array of PageSpeed averages.
  */
 function netrics_pagespeed_avgs( $post_id, $date = '2019-08' ) {
     $data    = get_post_meta( $post_id, 'nn_articles', true);
@@ -372,8 +373,9 @@ function netrics_pagespeed_avgs( $post_id, $date = '2019-08' ) {
 /**
  * Get PageSpeed averages for all articles of a Publication with results.
  *
- * @param  int   $post_id  ID of a post.
- * @return array $pub_ps   Array of PageSpeed averages.
+ * @param  int    $post_id   ID of a post.
+ * @param  string $meta_key  Post meta key with PSI results.
+ * @return array  $pub_ps    Array of PageSpeed averages.
  */
 function netrics_site_pagespeed( $post_id, $meta_key = 'nn_articles_201908' ) {
     $items   = get_post_meta( $post_id, $meta_key, true);
@@ -489,10 +491,11 @@ function netrics_pagespeed_format( $metric, $num, $size = 0 ) {
 }
 
 /**
- * Get
+ * Get text list of PSI results for a Publication.
  *
- * @param  int   $post_id  ID of a post.
- * @return array $pub_bw   Array of BuiltWith tech counts.
+ * @param  int    $post_id  ID of a post.
+ * @param  string $items    PSI results for an article.
+ * @return array  $html     HTML formatted text.
  */
 function netrics_articles_results( $post_id, $items ) {
     $html      = 'No articles.';
@@ -565,10 +568,11 @@ function netrics_articles_results( $post_id, $items ) {
 
 
 /**
- * Get
+ * Get HTML table of PSI results for a Publication.
  *
- * @param  int   $post_id  ID of a post.
- * @return array $pub_bw   Array of BuiltWith tech counts.
+ * @param  int    $post_id  ID of a post.
+ * @param  string $items    PSI results for an article.
+ * @return string $html     HTML table rows.
  */
 function netrics_articles_results_table( $post_id, $items ) {
     $html      = '';
@@ -618,12 +622,12 @@ function netrics_articles_results_table( $post_id, $items ) {
 
 
 /**
- * Get
+ * Get array of PSI metrics slugs.
  *
  *
  * @since   0.1.0
  *
- * @return array $pub_data Array of data for all CPT posts.
+ * @return array $metrics Array of slugs.
  */
 function netrics_get_pagespeed_metrics() {
     $metrics = array( 'dom', 'requests', 'size', 'speed', 'tti', 'score' );
@@ -632,12 +636,15 @@ function netrics_get_pagespeed_metrics() {
 }
 
 /**
- * Get
+ * Get data about Publications.
  *
  *
  * @since   0.1.0
  *
- * @return array $pub_data Array of data for all CPT posts.
+ * @param  query  $post_id  WP Query object.
+ * @param  bool   $$circ    Include circulation in returned data.
+ * @param  bool   $rank     Include site rank in returned data.
+ * @return array $pubs_data Array of data for all CPT posts.
  */
 function netrics_get_pubs_query_data( $query = array(), $circ = 1, $rank = 1 ) {
     if ( ! isset( $query->posts ) ) {
