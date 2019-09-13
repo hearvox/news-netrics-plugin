@@ -218,8 +218,21 @@ function netrics_get_string_between( $start, $stop, $content ) {
  * @param int $post_id Post ID.
  * @return array
  */
-function netrics_save_feed_items( $post_id, $items, $meta_key = 'nn_articles_201908', $term_id = 6284  ) {
+function netrics_save_feed_items( $post_id, $items, $meta_key = 'nn_articles_201909', $term_id = 6290  ) {
     if ( $items && isset( $items[0]['url'] ) ) { // Add post_meta and set term.
+
+        /*
+
+        // Add latest articles to post meta.
+        $articles_all = get_post_meta( $post_id, 'nn_articles', true );
+        $articles_all[ date( 'Y-m' ) ] = $items;
+        update_post_meta( $post_id, 'nn_articles_new', $items, true );
+        update_post_meta( $post_id, 'nn_articles', $articles_all, true );
+         */
+
+
+
+
         update_post_meta( $post_id, $meta_key, $items, true );
         $terms = wp_set_post_terms( $post_id, $term_id, 'flag', true ); // Term: '201908'.
     } else {

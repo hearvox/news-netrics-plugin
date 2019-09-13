@@ -477,7 +477,7 @@ function newsstats_set_pubs_pagespeed() {
 
 
 /**
- * Get PSI results. (Not currently used.)
+ * Get PSI results. (Used only in content-single-publication.)
  *
  *
  * @since   0.1.0
