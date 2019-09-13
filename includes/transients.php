@@ -507,7 +507,7 @@ function netrics_get_pubs_pagespeed_query( $query = array() ) {
             $pgspeed = $article['pagespeed'];
 
             foreach ($metrics as $metric ) {
-                if ( $pgspeed[$metric] ) {
+                if ( isset( $pgspeed[$metric] ) ) {
                     $pubs_data[$metric][] = floatval( $pgspeed[$metric] );
                 }
             }
