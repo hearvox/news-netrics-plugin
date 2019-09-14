@@ -18,20 +18,20 @@
  * @param int $query   Array of post IDs.
  * @return string $url Post meta value
  */
-function netrics_get_feeds( $query ) {
-    if ( ! isset( $query->posts ) ) {
-        $query = netrics_get_pubs_ids( 2000 );
+function netrics_get_feeds( $query_ids, $timeout = 30 ) {
+    if ( ! isset( $query_ids->posts ) ) {
+        $query_ids = netrics_get_pubs_ids( 2000 );
     }
 
     $success = array();
-    foreach ( $query->posts as $post_id ) {
+    foreach ( $query_ids->posts as $post_id ) {
         $url = get_post_meta( $post_id, 'nn_pub_rss', true ); // RSS file
         if ( ! $url ) {
             netrics_error( $post_id, 'nn_get_feeds>url' );
             continue;
         }
 
-        $xml = netrics_request_data( $url );
+        $xml = netrics_request_data( $url, $timeout );
         if ( ! $xml ) {
             netrics_error( $post_id, 'nn_get_feeds>xml' );
             continue;
@@ -53,7 +53,7 @@ function netrics_get_feeds( $query ) {
         }
 
         print_r( $items );
-        echo "$post_id flag: $terms[0]";
+        echo "$post_id flag: $terms[0]\n";
     }
 
     return $success;
@@ -76,19 +76,6 @@ function netrics_get_feed_url( $post_id ) {
         return new WP_Error( 'url_invalid', __( "URL does not validate." ) );
     }
 }
-
-/*
-function doer_of_stuff() {
-    return new WP_Error( 'broke', __( "I've fallen and can't get up", "my_textdomain" ) );
-}
-
-$return = doer_of_stuff();
-if( is_wp_error( $return ) ) {
-    echo $return->get_error_message();
-}
-*/
-
-
 
 /**
  * Get
@@ -129,6 +116,26 @@ function netrics_get_feed_items( $xml, $url ) {
     }
 }
 
+/**
+ *  Save latest publication articles in post meta.
+ *
+ *
+ * @since   0.1.0
+ *
+ * @param int $post_id Post ID.
+ * @return array
+ */
+function netrics_save_feed_items( $post_id, $items, $meta_key = 'nn_articles_new', $term_id = 6290  ) {
+    if ( $items && isset( $items[0]['url'] ) ) { // Add post_meta and set term.
+        update_post_meta( $post_id, $meta_key, $items );
+        $terms = wp_set_post_terms( $post_id, $term_id, 'flag', true ); // Term: '201908'.
+    } else {
+        return false;
+    }
+
+    return $terms;
+}
+
 /** Get
  *
  * @since   0.1.0
@@ -137,7 +144,6 @@ function netrics_get_feed_items( $xml, $url ) {
  * @return array
  */
 function netrics_get_feed_object( $xml ) {
-
     libxml_use_internal_errors( true );
     $xml_obj = simplexml_load_string( $xml, $url );
     if ( $xml_obj === false ) {
@@ -151,7 +157,6 @@ function netrics_get_feed_object( $xml ) {
     }
 
     return $xml_obj;
-
 }
 
 /**
@@ -206,40 +211,6 @@ function netrics_get_string_between( $start, $stop, $content ) {
     } else {
             return false;
     }
-}
-
-/**
- * Get
- *
- * print_r( newsstats_save_post_articles( 1234 ) );
- *
- * @since   0.1.0
- *
- * @param int $post_id Post ID.
- * @return array
- */
-function netrics_save_feed_items( $post_id, $items, $meta_key = 'nn_articles_201909', $term_id = 6290  ) {
-    if ( $items && isset( $items[0]['url'] ) ) { // Add post_meta and set term.
-
-        /*
-
-        // Add latest articles to post meta.
-        $articles_all = get_post_meta( $post_id, 'nn_articles', true );
-        $articles_all[ date( 'Y-m' ) ] = $items;
-        update_post_meta( $post_id, 'nn_articles_new', $items, true );
-        update_post_meta( $post_id, 'nn_articles', $articles_all, true );
-         */
-
-
-
-
-        update_post_meta( $post_id, $meta_key, $items, true );
-        $terms = wp_set_post_terms( $post_id, $term_id, 'flag', true ); // Term: '201908'.
-    } else {
-        return false;
-    }
-
-    return $terms;
 }
 
 /**
@@ -384,8 +355,6 @@ function newsstats_get_xml( $url ) {
 
 }
 
-
-
 /**
  * Get
  *
@@ -429,7 +398,6 @@ function newsstats_get_xml_links( $xml ) {
  *
  */
 function newsstats_get_feed_custom_bg( $url ) {
-
     $links = array();
     $api   = 'https://news.pubmedia.us/wp-content/plugins/news-netrics/api/rss-url.php?api=links&site=';
     $row   = 0;
@@ -447,7 +415,6 @@ function newsstats_get_feed_custom_bg( $url ) {
     }
 
     return $links;
-
 }
 
 
@@ -594,5 +561,15 @@ function detect_feed( $url ) {
     }
 }
 
+/*
+function doer_of_stuff() {
+    return new WP_Error( 'broke', __( "I've fallen and can't get up", "my_textdomain" ) );
+}
+
+$return = doer_of_stuff();
+if( is_wp_error( $return ) ) {
+    echo $return->get_error_message();
+}
+*/
 
 

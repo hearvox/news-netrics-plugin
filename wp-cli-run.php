@@ -5,25 +5,32 @@ Run code via WP-CLI
 
 */
 
+////////////////////////////////////////////
+// Monthly: Get latest articles from feeds.
+$month_feed = 6290; // '201909'.
+$flags = array( $month_feed, 6201, 6175, 6172 ); // Month with 'manual', 'none', 'json'.
+$secs  = 30;
 $args = array(
     'post_type'      => 'publication',
     'orderby'        => 'title',
     'order'          => 'ASC',
-    'posts_per_page' => 2000,
+    'posts_per_page' => 1000,
     'offset'         => 0,
     'fields'         => 'ids',
-    // 'post__in'       => array( 4029 ),
+    'tax_query' => array(
+        'relation' => 'AND',
+        array(
+            'taxonomy' => 'flag',
+            'field'    => 'term_id',
+            'terms'    => $flags,
+            'operator' => 'NOT IN',
+        ),
+    ),
 );
-$query = new WP_Query( $args );
-
-foreach( $query->posts as $post_id ) {
-    $articles_all = get_post_meta( $post_id, 'nn_articles', true );
-    $articles_add = get_post_meta( $post_id, 'nn_articles_2908', true );
-
-    $articles_all['2019-08'] = $articles_add;
-
-    update_post_meta( $post_id, 'nn_articles', $articles_all );
-}
+$query_ids = new WP_Query( $args );
+print_r( $query_ids->posts );
+$done = netrics_get_feeds( $query_ids, $secs );
+print_r( $done );
 
 /*
 
@@ -45,6 +52,7 @@ $args = array(
     'offset'         => 0,
     'fields'         => 'ids',
     'tax_query' => array(
+        'relation' => 'AND',
         array(
             'taxonomy' => 'flag',
             'field'    => 'term_id',
@@ -54,9 +62,9 @@ $args = array(
     ),
 
 );
-$query = new WP_Query( $args );
-print_r( $query->posts );
-$done = netrics_get_feeds( $query, $secs );
+$query_ids = new WP_Query( $args );
+print_r( $query_ids->posts );
+$done = netrics_get_feeds( $query_ids, $secs );
 print_r( $done );
 
 // Edit term and month:
