@@ -18,7 +18,7 @@
  * @param int $query   Array of post IDs.
  * @return string $url Post meta value
  */
-function netrics_get_feeds( $query_ids, $timeout = 30 ) {
+function netrics_get_feeds( $query_ids, $timeout = 10 ) {
     if ( ! isset( $query_ids->posts ) ) {
         $query_ids = netrics_get_pubs_ids( 2000 );
     }

@@ -9,7 +9,6 @@ Run code via WP-CLI
 // Monthly: Get latest articles from feeds.
 $month_feed = 6290; // '201909'.
 $flags = array( $month_feed, 6201, 6175, 6172 ); // Month with 'manual', 'none', 'json'.
-$secs  = 30;
 $args = array(
     'post_type'      => 'publication',
     'orderby'        => 'title',
@@ -29,7 +28,7 @@ $args = array(
 );
 $query_ids = new WP_Query( $args );
 print_r( $query_ids->posts );
-$done = netrics_get_feeds( $query_ids, $secs );
+$done = netrics_get_feeds( $query_ids );
 print_r( $done );
 
 /*
@@ -43,7 +42,6 @@ $month_psi  = 6291; // '1909done';
 // Monthly: Get latest articles from feeds.
 $month_feed = XXXX; // '2019XX'.
 $flags = array( $month_feed, 6201, 6175, 6172 ); // Month with 'manual', 'none', 'json'.
-$secs  = 30;
 $args = array(
     'post_type'      => 'publication',
     'orderby'        => 'title',
@@ -64,7 +62,7 @@ $args = array(
 );
 $query_ids = new WP_Query( $args );
 print_r( $query_ids->posts );
-$done = netrics_get_feeds( $query_ids, $secs );
+$done = netrics_get_feeds( $query_ids );
 print_r( $done );
 
 // Edit term and month:
