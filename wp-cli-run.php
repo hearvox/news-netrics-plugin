@@ -6,37 +6,40 @@ Run code via WP-CLI
 */
 
 ////////////////////////////////////////////
-// Monthly: Get latest articles from feeds.
+// Monthly: Run PSI test for articles.
 $month_feed = 6290; // '201909'.
-$flags = array( $month_feed, 6201, 6175, 6172 ); // Month with 'manual', 'none', 'json'.
+$month_done = 6291; // '1909done'.
 $args = array(
     'post_type'      => 'publication',
     'orderby'        => 'title',
     'order'          => 'ASC',
-    'posts_per_page' => 1000,
+    'posts_per_page' => 200,
     'offset'         => 0,
     'fields'         => 'ids',
-    'tax_query' => array(
-        'relation' => 'AND',
+    'tax_query'      => array(
+        'relation'  => 'AND',
         array(
             'taxonomy' => 'flag',
             'field'    => 'term_id',
-            'terms'    => $flags,
+            'terms'    => $month_feed,
+        ),
+        array(
+            'taxonomy' => 'flag',
+            'field'    => 'term_id',
+            'terms'    => $month_done,
             'operator' => 'NOT IN',
         ),
     ),
 );
 $query_ids = new WP_Query( $args );
 print_r( $query_ids->posts );
-$done = netrics_get_feeds( $query_ids );
-print_r( $done );
+// netrics_api_call_pagespeed( $query_ids );
 
 /*
 
 // Flags (taxonomy)
 $month_feed = 6290; // '201909';
-$month_psi  = 6291; // '1909done';
-
+$month_done  = 6291; // '1909done';
 
 ////////////////////////////////////////////
 // Monthly: Get latest articles from feeds.
@@ -70,7 +73,9 @@ print_r( $done );
 
 ////////////////////////////////////////////
 // Monthly: Run PSI test for articles.
-$month_psi = XXXX; // '2019XX'.
+$flags      = array( 6286, 6175, 6172 ), // '1908done' = 6286, 'none', 'json'
+$month_feed = XXXX; // '2019XX'.
+$month_done = XXXX; // '19XXdone'.
 $args = array(
     'post_type'      => 'publication',
     'orderby'        => 'title',
@@ -85,32 +90,17 @@ $args = array(
         array(
             'taxonomy' => 'flag',
             'field'    => 'term_id',
-            'terms'    => $month_psi, // '2019XX'
+            'terms'    => $month_feed,
         ),
         array(
             'taxonomy' => 'flag',
             'field'    => 'term_id',
-            'terms'    => array( 6286, 6175, 6172 ), // '1908done' = 6286, 'none', 'json'
+            'terms'    => $month_done,
             'operator' => 'NOT IN',
         ),
     ),
 );
 $query_ids = new WP_Query( $args );
 print_r( $query_ids->posts );
+netrics_api_call_pagespeed( $query_ids );
 
-foreach ( $query_ids->posts as $post_id ) {
-    // print_r( get_post_meta( $post_id, 'nn_articles_201906', true ) );
-}
-
-
-
-//////// Escenic CMS only.
-    'tax_query'      => array(
-        'relation'  => 'AND',
-        array(
-            'taxonomy' => 'cms',
-            'field'    => 'term_id',
-            'terms'    => 5815, // 'Escenic'
-        ),
-    ),
- */

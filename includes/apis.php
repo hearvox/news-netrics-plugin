@@ -137,7 +137,7 @@ function netrics_curl( $url ) {
  * @return string $items    Article URLs (and titles).
  */
 function netrics_get_pub_items( $post_id, $key = '' ) {
-    $meta_key = ( $key ) ? $key : 'nn_articles_' . netrics_get_data_month();
+    $meta_key = ( $key ) ? $key : 'nn_articles_new';
 
     $items = get_post_meta( $post_id, $meta_key, true ); // Articles.
 

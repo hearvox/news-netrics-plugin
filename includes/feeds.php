@@ -18,7 +18,7 @@
  * @param int $query   Array of post IDs.
  * @return string $url Post meta value
  */
-function netrics_get_feeds( $query_ids, $timeout = 10 ) {
+function netrics_get_feeds( $query_ids ) {
     if ( ! isset( $query_ids->posts ) ) {
         $query_ids = netrics_get_pubs_ids( 2000 );
     }
@@ -26,6 +26,9 @@ function netrics_get_feeds( $query_ids, $timeout = 10 ) {
     $success = array();
     foreach ( $query_ids->posts as $post_id ) {
         $url = get_post_meta( $post_id, 'nn_pub_rss', true ); // RSS file
+        // $gnews = 'https://news.google.com/rss/search?hl=en-US&gl=US&ceid=US=en&num=5&q=site=';
+        // $url = $gnews . get_the_title( $post_id );
+
         if ( ! $url ) {
             netrics_error( $post_id, 'nn_get_feeds>url' );
             continue;
