@@ -257,6 +257,33 @@ function get_terms_multi_select( $tax, $args = array(), $rows = 10 ) {
 }
 
 /*******************************
+ =BLOCKS
+ ******************************/
+class NETRICS_BLOCKS {
+
+    static function init() {
+        if ( is_admin() ) {
+          add_action( 'enqueue_block_editor_assets', array(__CLASS__, 'register_blocks' ) );
+        }
+    }
+
+    static function register_blocks() {
+        wp_register_script(
+            'netrics-iframed',
+            plugins_url( 'blocks/iframed/block-iframed.js', __FILE__ ),
+            array( 'wp-editor', 'wp-i18n', 'wp-element', 'wp-blocks', 'wp-components' ),
+            filemtime( plugin_dir_path( __FILE__ ) . 'blocks/iframed/block-iframed.js' )
+        );
+
+        register_block_type( 'news-netrics/iframed', array(
+            'editor_script' => 'netrics-iframed',
+        ) );
+    }
+
+} // class NETRICS_BLOCKS
+add_action( 'init', array('NETRICS_BLOCKS', 'init') );
+
+/*******************************
  =STATISTICS
  ******************************/
 /* ------------------------------------------------------------------------ *
