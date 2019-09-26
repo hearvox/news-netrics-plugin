@@ -181,8 +181,8 @@ function newsstats_get_pub_posts( $per_page = 100, $offset = 0 ) {
  * @return string Month in format YYYYMM.
  */
 function netrics_get_data_month() {
-    // return date( 'Ym' );
-    return '201908';
+    return date( 'Y-m' );
+    // return '201908';
 }
 
 /* ------------------------------------------------------------------------ *

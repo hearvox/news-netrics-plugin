@@ -337,6 +337,14 @@ function netrics_pagespeed_corr( $array ) {
  * @return array  $site_ps  Array of PageSpeed averages.
  */
 function netrics_pagespeed_avgs( $post_id, $date = '2019-08' ) {
+/*
+    // Used in: theme>>archive.php, page-data-list-articles.php, taxonomy-owner.php.
+    if ( !$date ) {
+        get_option( 'netrics_month' ); // OR
+        $date = date( 'Y-m' );
+    }
+
+*/
     $data    = get_post_meta( $post_id, 'nn_articles', true);
     $items   = $data[ $date ];
     $site_ps = array();
@@ -418,7 +426,7 @@ function netrics_pagespeed_results_list( $query, $items ) {
     $list = '';
     foreach ( $items as $item ) {
 
-        $list .= ( isset( $item['url'] ) ) ? "<li><a href=\"{$item['url']}\">{$item['title']}</a>" : '<li>';
+        $list .= ( isset( $item['url'] ) ) ? "<li><a href=\"{$item['url']}\">{$item['url']}</a>" : '<li>';
         if ( isset( $item['pagespeed']['error'] ) ) {
 
             $pgspeed = $item['pagespeed'];

@@ -78,7 +78,7 @@ function netrics_get_pagespeed( $url, $strategy = 'mobile' ) {
     $api     = $api_url . '?strategy=' . $strategy . '&fields=' . $fields . '&key=' . $api_key . '&url=';
 
     // Make API call to run PageSpeed test.
-    $json = newsstats_request_data( $api . urlencode( $url ), 60 );
+   $json = netrics_request_data( $api . urlencode( $url ), 300 );
     if ( $json ) {
         $data = json_decode( $json );
 
@@ -123,6 +123,10 @@ function netrics_save_pagespeed( $post_id, $pagespeed, $key, $term_id = 6291 ) {
         $items    = get_post_meta( $post_id, $meta_key, true );
         $items[$key]['pagespeed'] = $pagespeed; // Save results as array in post_meta.
         update_post_meta( $post_id, $meta_key, $items );
+
+        // $articles = array_merge( get_post_meta( $post_id, 'nn_articles', true ), $items );
+        // update_post_meta( $post_id, 'nn_articles', $articles );
+
         $terms = wp_set_post_terms( $post_id, array( $term_id ), 'flag', true ); // Flag success.
     } else {
         $terms = wp_set_post_terms( $post_id, $key . 'redo' . date( 'Ym' ), 'post_tag', true ); // Tag error.

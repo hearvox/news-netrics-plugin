@@ -415,7 +415,7 @@ function newsstats_set_pagespeed_avgs() {
     $metrics   = array( 'dom', 'requests', 'size', 'speed', 'tti', 'score' );
 
     foreach ( $query->posts as $post ) {
-        $articles  = get_post_meta( $post->ID, 'nn_articles_201908', true);
+        $articles  = get_post_meta( $post->ID, 'nn_articles_new', true);
 
         if ( $articles ) {
             $pagespeed = wp_list_pluck( $articles, 'pagespeed' );
@@ -450,7 +450,7 @@ function newsstats_set_pubs_pagespeed() {
     $metrics   = array( 'dom', 'requests', 'size', 'speed', 'tti', 'score' );
 
     foreach ( $query->posts as $post ) {
-        $articles = get_post_meta( $post->ID, 'nn_articles_201908', true);
+        $articles = get_post_meta( $post->ID, 'nn_articles_new', true);
 
         if ( $articles ) {
 
@@ -493,7 +493,7 @@ function netrics_get_pubs_pagespeed_query( $query = array() ) {
     $metrics   = array( 'dom', 'requests', 'size', 'speed', 'tti', 'score' );
 
     foreach ( $query->posts as $post ) {
-        $articles = get_post_meta( $post->ID, 'nn_articles_201908', true);
+        $articles = get_post_meta( $post->ID, 'nn_articles_new', true);
 
         if ( ! $articles ) {
             continue;

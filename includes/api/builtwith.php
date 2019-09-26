@@ -68,7 +68,7 @@ function netrics_api_builtwith( $post_id, $api_key, $api_type = 'free' ) {
 
     if ( $domain ) {
         // Make API call and return data with tech-category names and counts.
-        $bw_json = newsstats_request_data( $api_url );
+        $bw_json = netrics_request_data( $api_url );
         $bw_arr  = json_decode( $bw_json );
         $bw_data  = array();
         if ( isset( $bw_arr->groups ) ) {

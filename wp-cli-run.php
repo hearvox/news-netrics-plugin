@@ -33,7 +33,8 @@ $args = array(
 );
 $query_ids = new WP_Query( $args );
 print_r( $query_ids->posts );
-// netrics_api_call_pagespeed( $query_ids );
+$done = netrics_api_call_pagespeed( $query_ids );
+print_r( $done );
 
 /*
 
