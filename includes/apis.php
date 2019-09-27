@@ -16,7 +16,7 @@
  * @param  int   $offset    The starting point in array.
  * @return array $query     Array of WP Post objects.
  */
-function netrics_get_pub_posts( $per_page = 3000, $offset = 0 ) {
+function netrics_get_pub_posts( $per_page = 1000, $offset = 0 ) {
     $args = array(
         'post_type' => 'publication',
         'orderby'   => 'title',
