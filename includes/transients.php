@@ -95,10 +95,10 @@ function newsstats_get_all_publications() {
     }
 
     set_transient( 'newsnetrics_pubs', $pub_data, 30 * DAY_IN_SECONDS );
+    wp_reset_postdata();
 
     return $pub_data;
 
-    wp_reset_postdata();
 }
 
 

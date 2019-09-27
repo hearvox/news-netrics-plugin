@@ -326,9 +326,13 @@ function nstats_average( $array ) {
  * @param array $array Array of numbers.
  */
 function nstats_mean( $array ) {
-    // check_array( $array );
-    $mean = array_sum( $array ) / count( $array );
-  return $mean;
+    if ( count( $array ) ) {
+        $mean = array_sum( $array ) / count( $array );
+    } else {
+        $mean = 0;
+    }
+
+    return $mean;
 }
 
 /**
