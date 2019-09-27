@@ -7,6 +7,27 @@
  * @package    News Netrics
  * @subpackage news-netrics/includes
  */
+/**
+ * Get all CPT posts (Publication).
+ *
+ * @since   0.1.0
+ *
+ * @param  int   $per_page  The number of post to return.
+ * @param  int   $offset    The starting point in array.
+ * @return array $query     Array of WP Post objects.
+ */
+function netrics_get_pub_posts( $per_page = 3000, $offset = 0 ) {
+    $args = array(
+        'post_type' => 'publication',
+        'orderby'   => 'title',
+        'order'     => 'ASC',
+        'posts_per_page' => $per_page,
+        'offset'         => $offset,
+    );
+    $query = new WP_Query( $args );
+
+    return $query ;
+}
 
 /**
  * Get CPT (Publication) post IDs.
