@@ -6,28 +6,7 @@ $month_feed = 6294; // '201910'.
 $month_done = 6295; // '19109done'.
 
 $flags = array( $month_feed, 6175 ); // Month with 'none', 'json'.
-$args = array(
-    'post_type'      => 'publication',
-    'orderby'        => 'title',
-    'order'          => 'ASC',
-    'posts_per_page' => 500,
-    'offset'         => 0,
-    'fields'         => 'ids',
-    'tax_query' => array(
-        'relation' => 'AND',
-        array(
-            'taxonomy' => 'flag',
-            'field'    => 'term_id',
-            'terms'    => $flags,
-            'operator' => 'NOT IN',
-        ),
-    ),
-);
-$query_ids = new WP_Query( $args );
-print_r( $query_ids->posts );
-$done = netrics_get_feeds( $query_ids );
-print_r( $done );
-
+netrics_clear_month_data();
 
 
 /*
@@ -40,7 +19,7 @@ $month_done  = 6291; // '1909done';
 // 2. Get articles from JSON feeds (set 'articles' flag).
 // 3. Get articles from  XML feeds (set 'articles' flag).
 
-netrics_clear_month_data( $query_ids )
+netrics_clear_month_data();
 
 // delete_post_meta( $post_id, 'nn_articles_new' );
 // wp_remove_object_terms( $post_id, array( 1234, 5678 ), 'flag' ); // Monthly flags: feed and PSI.

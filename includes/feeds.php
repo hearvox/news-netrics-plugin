@@ -12,22 +12,28 @@
  * Articles (get articles links and titles from Publication feeds)
  * ------------------------------------------------------------------------ */
 /**
- * Remove month's temp post meta (articles) and flag.
+ * Delete month's temp post meta (articles) and flag.
  *
  * @since   0.1.1
  *
- * @param int $query_ids  WP Query objects with ID fields only.
- * @return void
+ * @param int     $query_ids  WP Query objects with ID fields only.
+ * @return string $log        Text log of true/false returns from deletions.
  */
-function netrics_clear_month_data( $query_ids ) {
+function netrics_clear_month_data( $query_ids = null ) {
     if ( ! isset( $query_ids->posts ) ) {
-            $query_ids = netrics_get_pubs_ids( 2000 );
+        $query_ids = netrics_get_pubs_ids( 2000 );
     }
 
+    $log = '';
     foreach ( $query_ids->posts as $post_id ) {
-        delete_post_meta( $post_id, 'nn_articles_new', true );
-        // wp_remove_object_terms( $post_id, 6492, 'flag' );
+        $del_articles = delete_post_meta( $post_id, 'nn_articles_new' );
+        // $del_errors   = delete_post_meta( $post_id, 'nn_error' );
+        // $del_flag     = wp_remove_object_terms( $post_id, 6294, 'flag' );
+
+        $log .= "$post_id $del_articles/$del_errors/$del_flag";
     }
+
+    return $log;
 }
 
 
@@ -111,6 +117,7 @@ function netrics_get_feed_url( $post_id ) {
 function netrics_get_feed_items( $xml, $url ) {
     $items   = array();
     $xml_obj = netrics_get_feed_object( $xml, $url ); // Make SimpleXML object.
+    $month   = date( 'Y-m' );
 
     // If SimpleXML fails, try parsing XML as string.
     if ( ! $xml_obj ) {
@@ -126,6 +133,7 @@ function netrics_get_feed_items( $xml, $url ) {
         foreach ( $xml_obj->channel->item as $item ) {
             $items[$i]['url']   = (string) $item->link;
             $items[$i]['title'] = (string) $item->title;
+            $items[$i]['date']  = (string) $month;
             $i++;
             if ( $i === 3 ) { // Need only 3 articles
                 break;
