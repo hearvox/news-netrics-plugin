@@ -11,6 +11,26 @@
 /* ------------------------------------------------------------------------ *
  * Articles (get articles links and titles from Publication feeds)
  * ------------------------------------------------------------------------ */
+/**
+ * Remove month's temp post meta (articles) and flag.
+ *
+ * @since   0.1.1
+ *
+ * @param int $query_ids  WP Query objects with ID fields only.
+ * @return void
+ */
+function netrics_clear_month_data( $query_ids ) {
+    if ( ! isset( $query_ids->posts ) ) {
+            $query_ids = netrics_get_pubs_ids( 2000 );
+    }
+
+    foreach ( $query_ids->posts as $post_id ) {
+        delete_post_meta( $post_id, 'nn_articles_new', true );
+        // wp_remove_object_terms( $post_id, 6492, 'flag' );
+    }
+}
+
+
 /** Get
  *
  * @since   0.1.0
@@ -128,7 +148,7 @@ function netrics_get_feed_items( $xml, $url ) {
  * @param int $post_id Post ID.
  * @return array
  */
-function netrics_save_feed_items( $post_id, $items, $meta_key = 'nn_articles_new', $term_id = 6290  ) {
+function netrics_save_feed_items( $post_id, $items, $meta_key = 'nn_articles_new', $term_id = 6294  ) {
     if ( $items && isset( $items[0]['url'] ) ) { // Add post_meta and set term.
         update_post_meta( $post_id, $meta_key, $items );
         $terms = wp_set_post_terms( $post_id, $term_id, 'flag', true ); // Term: '201908'.
@@ -564,6 +584,19 @@ function detect_feed( $url ) {
     }
 }
 
+/**
+ * Check for a specific domain name in an URL's hostname.
+ *
+ * @param  string $url    URL to check (in its hostname).
+ * @param  string $domain Domain name to check for.
+ * @return bool   $check  True if domain in URL host, false if not.
+ */
+function netrics_is_url_domain( $url, $domain ) {
+    $host  = parse_url( $url, PHP_URL_HOST );
+    $check = ( $domain === $host || strpos( $host, '.' . $domain ) ) ? true : false;
+
+    return $check;
+}
 /*
 function doer_of_stuff() {
     return new WP_Error( 'broke', __( "I've fallen and can't get up", "my_textdomain" ) );
