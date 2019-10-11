@@ -202,15 +202,16 @@ function netrics_get_feed_object( $xml ) {
  */
 function netrics_parse_xml( $xml ) {
     $xml_arr = explode( '<item>', $xml ); // Make array of XML items.
+    $month   = date( 'Y-m' );
 
     if ( is_array( $xml_arr ) ) {
 
         $items = array();
         array_shift( $xml_arr ); // Remove first element (<channel>).
         foreach ($xml_arr as $key => $item) {
-
-            $items[$key]['title'] = netrics_get_string_between( '<title>', '</title>', $item );
             $items[$key]['url']   = netrics_get_string_between( '<link>', '</link>', $item );
+            $items[$key]['title'] = netrics_get_string_between( '<title>', '</title>', $item );
+            $items[$key]['date']  = $month;
             if ( 2 <= $key ) { // Need only 3 articles.
                 break;
             }
@@ -258,6 +259,7 @@ function netrics_parse_json_items( $post_id ) {
     $url   = get_post_meta( $post_id, 'nn_pub_rss', true ); // RSS file
     $json  = netrics_request_data( $url );
     $posts = explode( '"post",', $json );
+    $month = date( 'Y-m' );
 
     if ( is_array( $posts ) && count( $posts ) > 1 ) {
 
@@ -268,8 +270,9 @@ function netrics_parse_json_items( $post_id ) {
             $link  = netrics_get_string_between( '"link":"', '",', $post );
             $title = netrics_get_string_between( '"title":{"rendered":"', '"},', $post );
 
-            $items[$key]['title'] = $title;
             $items[$key]['url']   = stripslashes( $link );
+            $items[$key]['title'] = $title;
+            $items[$key]['date']  = (string) $month;
             if ( 2 <= $key ) { // Need only 3 articles.
                 break;
             }

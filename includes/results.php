@@ -330,21 +330,197 @@ function netrics_pagespeed_corr( $array ) {
  * PageSpeed Insights results
  * ------------------------------------------------------------------------ */
 /**
+ * Add Pub's current-month articles/PSI-results to PSI history.
+ *
+ * Post meta: add array 'nn_articles_new' to 'nn_articles'.
+ *
+ * @param
+ * @return
+ */
+function netrics_add_month_psi() {
+    $flag = 6295;
+    $month = date( 'Y-m' );
+
+    $args = array(
+        'post_type'      => 'publication',
+        'orderby'        => 'title',
+        'order'          => 'ASC',
+        'posts_per_page' => 3000,
+        'offset'         => 0,
+        'fields'         => 'ids',
+        'tax_query'      => array(
+            'relation' => 'AND',
+            array(
+                'taxonomy' => 'flag',
+                'field'    => 'term_id',
+                'terms'    => $flag,
+            ),
+        ),
+    );
+    $query_ids = new WP_Query( $args );
+
+    foreach( $query_ids->posts as $post_id ) {
+        $articles_all = get_post_meta( $post_id, 'nn_articles', true );
+        $articles_add = get_post_meta( $post_id, 'nn_articles_new', true );
+
+        $articles_all[ $month ] = $articles_add;
+
+        update_post_meta( $post_id, 'nn_articles', $articles_all );
+
+        // Print results.
+        print_r( get_post_meta( $post_id, 'nn_articles', true ) );
+    }
+
+    wp_reset_postdata();
+}
+
+/**
+ * Calculate Pub's current PSI averages; save in averages history and monthly score.
+ *
+ * Post meta: average PSI metrics in 'nn_articles_new'.
+ * Save averages array to 'nn_psi_avgs' and number to 'nn_psi_score'.
+ *
+ * @param
+ * @return
+ */
+ function netrics_add_month_psi_avgs() {
+    $flag = 6295;
+    $month = date( 'Y-m' );
+
+    $args = array(
+        'post_type'      => 'publication',
+        'orderby'        => 'title',
+        'order'          => 'ASC',
+        'posts_per_page' => 3000,
+        'offset'         => 0,
+        'fields'         => 'ids',
+        'tax_query'      => array(
+            'relation' => 'AND',
+            array(
+                'taxonomy' => 'flag',
+                'field'    => 'term_id',
+                'terms'    => $flag,
+            ),
+        ),
+    );
+    $query_ids = new WP_Query( $args );
+
+    foreach( $query_ids->posts as $post_id ) {
+        $nn_psi_avgs = get_post_meta( $post_id, 'nn_psi_avgs', true );
+        $articles    = get_post_meta( $post_id, 'nn_articles', true );
+
+        if ( isset( $articles[ $month ] ) ) {
+            foreach ( $articles as $month => $results ) {
+                $nn_psi_avgs[ $month ] = netrics_pagespeed_avgs( $post_id, $month );
+            }
+
+            $avgs  = update_post_meta( $post_id, 'nn_psi_avgs', $nn_psi_avgs );
+            $score = ( isset( $nn_psi_avgs[ $date ]['score'] ) ) ? $nn_psi_avgs[ $date ]['score'] : '';
+            update_post_meta( $post_id, 'nn_psi_score', $score );
+
+            // Print results.
+            print_r( get_post_meta( $post_id, 'nn_psi_avgs', true ) );
+            echo $post_id . ' ' . get_post_meta( $post_id, 'nn_psi_score', true ) . "\n";
+        }
+    }
+}
+
+/**
+ * Calculate all Pubs' current PSI averages; save in averages history.
+ *
+ * Post Meta: average all Pubs' 'nn_psi_avgs'.
+ * Transient: Save averages array to 'netrics_psi'
+ * and individual Pub's to 'netrics_psi_avgs'.
+ *
+ * @param
+ * @return
+ */
+ function netrics_add_month_psi_avgs_all() {
+    $month = date( 'Y-m' );
+    $query = netrics_get_pub_posts();
+
+    $pubs_psi = $site_psi = array();
+
+    // Array of each pub's current PSI averages.
+    foreach ( $query->posts as $post ) {
+        // Get all months of Pub's PSI averages.
+        $psi_avgs = get_post_meta( $post->ID, 'nn_psi_avgs', true);
+
+        // Add Pub's current month's Pub's PSI average to array.
+        if ( isset( $psi_avgs[ $month ]['score'] ) ) {
+            $pubs_psi[ $post->ID ] = $psi_avgs[ $month ]; // Current averages.
+            $pubs_psi[ $post->ID ][ 'date' ] =  $month; // Current month.
+        }
+    }
+
+    print_r( $pubs_psi );
+    // Array of current PSI averages for each Pub.
+    set_transient( 'netrics_psi_avgs', $pubs_psi, 90 * DAY_IN_SECONDS );
+
+    // Averages of averages for all Pubs.
+    $all_scores = wp_list_pluck( $pubs_psi, 'score' );
+    $all_speeds = wp_list_pluck( $pubs_psi, 'speed' );
+    $all_ttis   = wp_list_pluck( $pubs_psi, 'tti' );
+    $all_sizes  = wp_list_pluck( $pubs_psi, 'size' );
+    $all_reqs   = wp_list_pluck( $pubs_psi, 'requests' );
+    $all_doms   = wp_list_pluck( $pubs_psi, 'dom' );
+
+    // Save averaged averages as array in a transient.
+    $site_psi[$month]['date']     = $month;
+    // Number of articles (array_sum) and papers (count) with results.
+    $site_psi[$month]['results']  = array_sum( wp_list_pluck( $pubs_psi, 'results' ) );
+    $site_psi[$month]['total']    = count( $pubs_psi ); // Number of
+    // Calculate means.
+    $site_psi[$month]['score']    = nstats_mean( $all_scores );
+    $site_psi[$month]['speed']    = nstats_mean( $all_speeds );
+    $site_psi[$month]['tti']      = nstats_mean( $all_ttis );
+    $site_psi[$month]['size']     = nstats_mean( $all_sizes );
+    $site_psi[$month]['requests'] = nstats_mean( $all_reqs );
+    $site_psi[$month]['dom']      = nstats_mean( $all_doms );
+    // Calculate medians (2nd quartile).
+    $site_psi[$month]['score-q2'] = nstats_q2( $all_scores );
+    $site_psi[$month]['speed-q2'] = nstats_q2( $all_speeds );
+    $site_psi[$month]['tti-q2']   = nstats_q2( $all_ttis );
+    $site_psi[$month]['size-q2']  = nstats_q2( $all_sizes );
+    $site_psi[$month]['req-q2']   = nstats_q2( $all_reqs );
+    $site_psi[$month]['dom-q2']   = nstats_q2( $all_doms );
+
+    // Array of averages for all Pubs.
+    $site_psi[$month]['score']    = nstats_mean( $all_scores );
+    $site_psi[$month]['speed']    = nstats_mean( $all_speeds );
+    $site_psi[$month]['tti']      = nstats_mean( $all_ttis );
+    $site_psi[$month]['size']     = nstats_mean( $all_sizes );
+    $site_psi[$month]['requests'] = nstats_mean( $all_reqs );
+    $site_psi[$month]['dom']      = nstats_mean( $all_doms );
+
+    // Get monthly history of combined averages for all Pubs.
+    $netrics_psi = get_transient( 'netrics_psi' );
+
+    $netrics_psi[ $month ] = $site_psi[ $month ];
+
+    // Set monthly history adding current month's combined averages.
+    set_transient( 'netrics_psi', $netrics_psi, 90 * DAY_IN_SECONDS );
+
+    // Log results.
+    print_r( get_transient( 'netrics_psi' ) );
+    print_r( get_transient( 'netrics_psi_avgs' ) );
+}
+
+/**
  * Get PageSpeed averages for all articles of a Publication with results.
  *
  * @param  int    $post_id  ID of a post.
  * @param  string $date     Month of PSI tests (YYYY-MM).
  * @return array  $site_ps  Array of PageSpeed averages.
  */
-function netrics_pagespeed_avgs( $post_id, $date = '2019-08' ) {
-/*
+function netrics_pagespeed_avgs( $post_id, $date = '2018-09' ) {
     // Used in: theme>>archive.php, page-data-list-articles.php, taxonomy-owner.php.
-    if ( !$date ) {
-        get_option( 'netrics_month' ); // OR
+
+    if ( ! $date ) {
+        // get_option( 'netrics_month' );
         $date = date( 'Y-m' );
     }
 
-*/
     $data    = get_post_meta( $post_id, 'nn_articles', true);
     $items   = $data[ $date ];
     $site_ps = array();

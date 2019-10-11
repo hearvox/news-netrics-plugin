@@ -117,7 +117,7 @@ function netrics_get_pagespeed( $url, $strategy = 'mobile' ) {
  * @param int $post_id Post ID.
  * @return string $url Post meta value
  */
-function netrics_save_pagespeed( $post_id, $pagespeed, $key, $term_id = 6291 ) {
+function netrics_save_pagespeed( $post_id, $pagespeed, $key, $term_id = 6295 ) { // '1910done'
     if ( $pagespeed ) {
         $meta_key = 'nn_articles_new';
         $items    = get_post_meta( $post_id, $meta_key, true );
