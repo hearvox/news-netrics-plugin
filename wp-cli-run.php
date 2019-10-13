@@ -2,15 +2,8 @@
 /*
 Run code via WP-CLI
 */
-$month_feed = 6294; // '201910'.
-$month_done = 6295; // '19109done'.
-
-$flags = array( $month_feed, 6175 ); // Month with 'none', 'json'.
 
 netrics_add_month_psi_avgs_all();
-
-
-
 
 /*
 
@@ -109,3 +102,12 @@ foreach( $query_ids->posts as $post_id ) {
     print_r( get_post_meta( $post_id, 'nn_articles_new', true) );
 }
 // 'post__in'       => array( 4209, 4273, 4795, 5076 ),
+
+// results.php
+netrics_add_month_psi();
+netrics_add_month_psi_avgs();
+netrics_add_month_psi_avgs_all();
+*/
+
+
+

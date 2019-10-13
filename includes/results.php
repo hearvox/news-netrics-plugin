@@ -409,13 +409,15 @@ function netrics_add_month_psi() {
         $nn_psi_avgs = get_post_meta( $post_id, 'nn_psi_avgs', true );
         $articles    = get_post_meta( $post_id, 'nn_articles', true );
 
+        // Add current month's results.
         if ( isset( $articles[ $month ] ) ) {
-            foreach ( $articles as $month => $results ) {
+            // foreach ( $articles as $month => $results ) { // All months.
+            foreach ( $articles[ $month ] as $results ) {
                 $nn_psi_avgs[ $month ] = netrics_pagespeed_avgs( $post_id, $month );
             }
 
             $avgs  = update_post_meta( $post_id, 'nn_psi_avgs', $nn_psi_avgs );
-            $score = ( isset( $nn_psi_avgs[ $date ]['score'] ) ) ? $nn_psi_avgs[ $date ]['score'] : '';
+            $score = ( isset( $nn_psi_avgs[ $month ]['score'] ) ) ? $nn_psi_avgs[ $month ]['score'] : '';
             update_post_meta( $post_id, 'nn_psi_score', $score );
 
             // Print results.
@@ -423,6 +425,69 @@ function netrics_add_month_psi() {
             echo $post_id . ' ' . get_post_meta( $post_id, 'nn_psi_score', true ) . "\n";
         }
     }
+}
+
+/**
+ * Get PageSpeed averages for all articles of a Publication with results.
+ *
+ * @param  int    $post_id  ID of a post.
+ * @param  string $date     Month of PSI tests (YYYY-MM).
+ * @return array  $pub_psi  Array of PageSpeed averages.
+ */
+function netrics_pagespeed_avgs( $post_id, $date = null ) {
+    // Used in: theme>>archive.php, page-data-list-articles.php, taxonomy-owner.php.
+    if ( ! $date ) {
+        // get_option( 'netrics_month' );
+        $date = date( 'Y-m' );
+    }
+
+    $data    = get_post_meta( $post_id, 'nn_articles', true);
+    $items   = $data[ $date ];
+    $pub_psi = array();
+
+    if ( ! $items || ! isset( $items[0]['pagespeed'] ) ) {
+        return $pub_psi;
+    }
+
+    $pagespeed = wp_list_pluck( $items, 'pagespeed' );
+    $errors    = wp_list_pluck( $pagespeed, 'error' );
+
+    if ( ! in_array( 0, $errors) ) { // Proceed only if results (i.e, no error = 0).
+        return $pub_psi;
+    }
+
+    foreach ( $pagespeed as $key => $result ) { // Remove item if no results (error > 0).
+        if ( $result['error'] ) {
+            unset( $pagespeed[$key] );
+        }
+    }
+
+    // Results for Pub's articles.
+    $pub_scores = wp_list_pluck( $pagespeed, 'score' );
+    $pub_speeds = wp_list_pluck( $pagespeed, 'speed' );
+    $pub_ttis   = wp_list_pluck( $pagespeed, 'tti' );
+    $pub_sizes  = wp_list_pluck( $pagespeed, 'size' );
+    $pub_reqs   = wp_list_pluck( $pagespeed, 'requests' );
+    $pub_doms   = wp_list_pluck( $pagespeed, 'dom' );
+
+    // Number of articles with results.
+    $pub_psi['results']  = count( $pagespeed );
+    // Calculate means for Pub's articles.
+    $pub_psi['score']    = nstats_mean( $pub_scores );
+    $pub_psi['speed']    = nstats_mean( $pub_speeds );
+    $pub_psi['tti']      = nstats_mean( $pub_ttis );
+    $pub_psi['size']     = nstats_mean( $pub_sizes );
+    $pub_psi['requests'] = nstats_mean( $pub_reqs );
+    $pub_psi['dom']      = nstats_mean( $pub_doms );
+    // Calculate medians (2nd quartile).
+    $pub_psi['score-q2']    = nstats_q2( $pub_scores );
+    $pub_psi['speed-q2']    = nstats_q2( $pub_speeds );
+    $pub_psi['tti-q2']      = nstats_q2( $pub_ttis );
+    $pub_psi['size-q2']        = nstats_q2( $pub_sizes );
+    $pub_psi['requests-q2'] = nstats_q2( $pub_reqs );
+    $pub_psi['dom-q2']      = nstats_q2( $pub_doms );
+
+    return $pub_psi;
 }
 
 /**
@@ -453,9 +518,8 @@ function netrics_add_month_psi() {
         }
     }
 
-    print_r( $pubs_psi );
     // Array of current PSI averages for each Pub.
-    set_transient( 'netrics_psi_avgs', $pubs_psi, 90 * DAY_IN_SECONDS );
+    set_transient( 'netrics_psi_avgs', $pubs_psi, 70 * DAY_IN_SECONDS );
 
     // Averages of averages for all Pubs.
     $all_scores = wp_list_pluck( $pubs_psi, 'score' );
@@ -478,20 +542,12 @@ function netrics_add_month_psi() {
     $site_psi[$month]['requests'] = nstats_mean( $all_reqs );
     $site_psi[$month]['dom']      = nstats_mean( $all_doms );
     // Calculate medians (2nd quartile).
-    $site_psi[$month]['score-q2'] = nstats_q2( $all_scores );
-    $site_psi[$month]['speed-q2'] = nstats_q2( $all_speeds );
-    $site_psi[$month]['tti-q2']   = nstats_q2( $all_ttis );
-    $site_psi[$month]['size-q2']  = nstats_q2( $all_sizes );
-    $site_psi[$month]['req-q2']   = nstats_q2( $all_reqs );
-    $site_psi[$month]['dom-q2']   = nstats_q2( $all_doms );
-
-    // Array of averages for all Pubs.
-    $site_psi[$month]['score']    = nstats_mean( $all_scores );
-    $site_psi[$month]['speed']    = nstats_mean( $all_speeds );
-    $site_psi[$month]['tti']      = nstats_mean( $all_ttis );
-    $site_psi[$month]['size']     = nstats_mean( $all_sizes );
-    $site_psi[$month]['requests'] = nstats_mean( $all_reqs );
-    $site_psi[$month]['dom']      = nstats_mean( $all_doms );
+    $site_psi[$month]['score-q2']    = nstats_q2( $all_scores );
+    $site_psi[$month]['speed-q2']    = nstats_q2( $all_speeds );
+    $site_psi[$month]['tti-q2']      = nstats_q2( $all_ttis );
+    $site_psi[$month]['size-q2']     = nstats_q2( $all_sizes );
+    $site_psi[$month]['requests-q2'] = nstats_q2( $all_reqs );
+    $site_psi[$month]['dom-q2']      = nstats_q2( $all_doms );
 
     // Get monthly history of combined averages for all Pubs.
     $netrics_psi = get_transient( 'netrics_psi' );
@@ -499,59 +555,11 @@ function netrics_add_month_psi() {
     $netrics_psi[ $month ] = $site_psi[ $month ];
 
     // Set monthly history adding current month's combined averages.
-    set_transient( 'netrics_psi', $netrics_psi, 90 * DAY_IN_SECONDS );
+    set_transient( 'netrics_psi', $netrics_psi, 70 * DAY_IN_SECONDS );
 
     // Log results.
     print_r( get_transient( 'netrics_psi' ) );
     print_r( get_transient( 'netrics_psi_avgs' ) );
-}
-
-/**
- * Get PageSpeed averages for all articles of a Publication with results.
- *
- * @param  int    $post_id  ID of a post.
- * @param  string $date     Month of PSI tests (YYYY-MM).
- * @return array  $site_ps  Array of PageSpeed averages.
- */
-function netrics_pagespeed_avgs( $post_id, $date = '2018-09' ) {
-    // Used in: theme>>archive.php, page-data-list-articles.php, taxonomy-owner.php.
-
-    if ( ! $date ) {
-        // get_option( 'netrics_month' );
-        $date = date( 'Y-m' );
-    }
-
-    $data    = get_post_meta( $post_id, 'nn_articles', true);
-    $items   = $data[ $date ];
-    $site_ps = array();
-
-    if ( ! $items || ! isset( $items[0]['pagespeed'] ) ) {
-        return $site_ps;
-    }
-
-    $pagespeed = wp_list_pluck( $items, 'pagespeed' );
-    $errors    = wp_list_pluck( $pagespeed, 'error' );
-
-    if ( ! in_array( 0, $errors) ) { // Proceed only if results (i.e, no error = 0).
-        return $site_ps;
-    }
-
-    foreach ( $pagespeed as $key => $result ) { // Remove item if no results (error > 0).
-        if ( $result['error'] ) {
-            unset( $pagespeed[$key] );
-        }
-    }
-
-    // PageSpeed data.
-    $site_ps['score']    = nstats_mean( wp_list_pluck( $pagespeed, 'score' ) );
-    $site_ps['speed']    = nstats_mean( wp_list_pluck( $pagespeed, 'speed' ) );
-    $site_ps['tti']      = nstats_mean( wp_list_pluck( $pagespeed, 'tti' ) );
-    $site_ps['size']     = nstats_mean( wp_list_pluck( $pagespeed, 'size' ) );
-    $site_ps['requests'] = nstats_mean( wp_list_pluck( $pagespeed, 'requests' ) );
-    $site_ps['dom']      = nstats_mean( wp_list_pluck( $pagespeed, 'dom' ) );
-    $site_ps['results']  = count( $pagespeed ); // Number of articles with results.
-
-    return $site_ps;
 }
 
 /**
