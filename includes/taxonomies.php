@@ -158,6 +158,41 @@ function newsstats_taxonomies() {
 }
 add_action( 'init', 'newsstats_taxonomies', 0 );
 
+/*******************************
+ =QUERY
+ ******************************/
+/**
+ * Create two taxonomies, CMS and Server for the post type 'post'.
+ *
+ * @see register_post_type() for registering custom post types.
+ */
+function netrics_get_term_pub_ids( $term ) {
+    if ( ! $term instanceof WP_Term ) {
+        return new WP_Error( 'invalid_term', __( 'Not a WP_Term Object.' ) );
+    }
+
+    $args = array(
+        'post_type'              => 'publication',
+        'posts_per_page'         => 1000,
+        'no_found_rows'          => true,
+        'update_post_meta_cache' => false,
+        'update_post_term_cache' => false,
+        'fields' => 'ids',
+        'tax_query' => array(
+            'relation'  => 'AND',
+            array(
+                'taxonomy' => $term->taxonomy,
+                'field'    => 'term_id',
+                'terms'    => $term->term_taxonomy_id,
+            ),
+        ),
+    );
+    $query_ids = new WP_Query( $args );
+
+    wp_reset_postdata();
+
+    return $query_ids;
+}
 
 /*******************************
  =TERM META

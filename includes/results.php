@@ -12,6 +12,70 @@
  * HTML Tables
  * ------------------------------------------------------------------------ */
 /**
+ * Outputs HTML table body rows with mean and median all-Pubs averages.
+ *
+ * @param array $month_avgs  PSI means and medians.
+ * @return void
+ */
+function netrics_print_pubs_avgs_table( $month_avgs = array() ) {
+    if ( ! $month_avgs ) { // If no averages supplied, get averages for all Pubs.
+        $pubs_avgs  = get_transient( 'netrics_psi' );
+        $month_avgs = end( $pubs_avgs );
+        $month      = key( array_slice( $pubs_avgs, -1, 1, true ) );
+    } else {
+        $month = $month_avgs['date'];
+    }
+
+    $metrics = netrics_get_pagespeed_metrics();
+    ?>
+    <table class="tabular">
+        <caption>Average PSI results for <output><?php echo $month_avgs['total']; ?></output> U.S. daily newspapers (<output><?php echo $month_avgs['results']; ?></output> articles: <?php echo $month ?>)</caption>
+        <?php echo netrics_pubs_avgs_table_head(); ?>
+        <tbody>
+            <tr>
+                <th scope="row"><?php esc_attr_e( 'Mean', 'newsnetrics' ); ?></th>
+                <?php
+                foreach ( $metrics as $metric ) {
+                    echo '<td>' . netrics_pagespeed_format( $metric, $month_avgs[ $metric ] ) . '</td>';
+                }
+                ?>
+            </tr>
+            <tr>
+                <th scope="row"><?php esc_attr_e( 'Median', 'newsnetrics' ); ?></th>
+                <?php
+                foreach ( $metrics as $metric ) {
+                    echo '<td>' . netrics_pagespeed_format( $metric, $month_avgs[ $metric . '-q2' ] ) . '</td>';
+                }
+                ?>
+            </tr>
+        </tbody>
+    </table>
+    <?php
+}
+
+/**
+ * Outputs HTML table headings (<th>) for PSI metrics.
+ *
+ * @return string $thead HTML table headings.
+ */
+function netrics_pubs_avgs_table_head() {
+    $thead   = '';
+    $metrics = netrics_get_pagespeed_metrics();
+
+    // Build table head HTML.
+    $thead  .= '<thead><tr><td></td>';
+
+    foreach ( $metrics as $metric ) {
+        $thead .= "<th scope=\"col\">$metric</th>";
+    }
+
+    $thead  .= '</tr></thead>';
+
+    return $thead;
+}
+
+
+/**
  * Outputs HTML table head and body with array averages and medians.
  *
  */
@@ -155,21 +219,6 @@ function netrics_pagespeed( $array ) {
  * Outputs HTML with array averages, quartiles, and standard deviations.
  *
  */
-function netrics_pagespeed_thead() {
-    $thead   = '';
-    $metrics = netrics_get_pagespeed_metrics();
-
-    foreach ( $metrics as $metric ) {
-        $thead .= "<th>$metric</th>";
-    }
-
-    return $thead;
-}
-
-/**
- * Outputs HTML with array averages, quartiles, and standard deviations.
- *
- */
 function netrics_pagespeed_tbody( $array, $all = 1 ) {
     $tbody   = '';
     $metrics = netrics_get_pagespeed_metrics();
@@ -240,6 +289,22 @@ function netrics_pagespeed_tbody( $array, $all = 1 ) {
     }
 
     return $tbody;
+}
+
+/**
+ * Outputs HTML table headings (<th>) for PSI metrics.
+ *
+ * @return string $thead  HTML table headings.
+ */
+function netrics_pagespeed_thead() {
+    $thead   = '';
+    $metrics = netrics_get_pagespeed_metrics();
+
+    foreach ( $metrics as $metric ) {
+        $thead .= "<th>$metric</th>";
+    }
+
+    return $thead;
 }
 
 /**
@@ -428,6 +493,49 @@ function netrics_add_month_psi() {
 }
 
 /**
+ * Calculate combined PSI averages for a set of Pubs (e.g., with a taxonomy term).
+ *
+ * @param array $post_ids    Array of Post IDs (for the set of Pubs).
+ * @return array $pubs_avgs  Array of combined means and medians.
+ */
+ function netrics_pubs_psi_avgs( $post_ids ) {
+    $psi_avgs  = get_transient( 'netrics_psi_avgs' ); // Posts in with current PSI results.
+    $id_keys   = array_flip( $post_ids ); // Make Post IDs (values) be the keys.
+    $pubs_psi  = array_intersect_key( $psi_avgs, $id_keys ); // Posts in set with results.
+    $pubs_avgs = array();
+
+    // Averages of averages for Pubs.
+    $all_scores = wp_list_pluck( $pubs_psi, 'score' );
+    $all_speeds = wp_list_pluck( $pubs_psi, 'speed' );
+    $all_ttis   = wp_list_pluck( $pubs_psi, 'tti' );
+    $all_sizes  = wp_list_pluck( $pubs_psi, 'size' );
+    $all_reqs   = wp_list_pluck( $pubs_psi, 'requests' );
+    $all_doms   = wp_list_pluck( $pubs_psi, 'dom' );
+
+    // Get date from first item in array.
+    $pubs_avgs['date']  = reset( $pubs_psi )['date'];
+    // Number of articles (array_sum) and papers (count) with results.
+    $pubs_avgs['results']  = array_sum( wp_list_pluck( $pubs_psi, 'results' ) );
+    $pubs_avgs['total']    = count( $pubs_psi ); // Number of
+    // Calculate means for PSI metrics.
+    $pubs_avgs['score']    = nstats_mean( $all_scores );
+    $pubs_avgs['speed']    = nstats_mean( $all_speeds );
+    $pubs_avgs['tti']      = nstats_mean( $all_ttis );
+    $pubs_avgs['size']     = nstats_mean( $all_sizes );
+    $pubs_avgs['requests'] = nstats_mean( $all_reqs );
+    $pubs_avgs['dom']      = nstats_mean( $all_doms );
+    // Calculate medians (2nd quartile).
+    $pubs_avgs['score-q2']    = nstats_q2( $all_scores );
+    $pubs_avgs['speed-q2']    = nstats_q2( $all_speeds );
+    $pubs_avgs['tti-q2']      = nstats_q2( $all_ttis );
+    $pubs_avgs['size-q2']     = nstats_q2( $all_sizes );
+    $pubs_avgs['requests-q2'] = nstats_q2( $all_reqs );
+    $pubs_avgs['dom-q2']      = nstats_q2( $all_doms );
+
+    return $pubs_avgs;
+}
+
+/**
  * Get PageSpeed averages for all articles of a Publication with results.
  *
  * @param  int    $post_id  ID of a post.
@@ -483,7 +591,7 @@ function netrics_pagespeed_avgs( $post_id, $date = null ) {
     $pub_psi['score-q2']    = nstats_q2( $pub_scores );
     $pub_psi['speed-q2']    = nstats_q2( $pub_speeds );
     $pub_psi['tti-q2']      = nstats_q2( $pub_ttis );
-    $pub_psi['size-q2']        = nstats_q2( $pub_sizes );
+    $pub_psi['size-q2']     = nstats_q2( $pub_sizes );
     $pub_psi['requests-q2'] = nstats_q2( $pub_reqs );
     $pub_psi['dom-q2']      = nstats_q2( $pub_doms );
 
@@ -648,7 +756,7 @@ function netrics_pagespeed_results_list( $query, $items ) {
  *
  *
  */
-function netrics_pagespeed_format( $metric, $num, $size = 0 ) {
+function netrics_pagespeed_format( $metric, $num, $size_unit = 0 ) {
     switch ( $metric ) {
         case 'score':
             $num = number_format( $num * 100, 1, '.', ',' );
@@ -660,7 +768,7 @@ function netrics_pagespeed_format( $metric, $num, $size = 0 ) {
             $num = number_format( $num / 1000, 1, '.', ',' );
             break;
         case 'size':
-            if ( $size ) {
+            if ( $size_unit ) {
                 $num = number_format( $num / 1000000, 1, '.', ',' ); // Number only.
             } else {
                 $num = size_format( $num, 1 ); // Number with unit (e.g., MB).
