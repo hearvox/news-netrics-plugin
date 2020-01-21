@@ -17,7 +17,7 @@
  * @param array $month_avgs  PSI means and medians.
  * @return void
  */
-function netrics_print_pubs_avgs_table( $month_avgs = array() ) {
+function netrics_print_pubs_avgs_table( $month_avgs = array(), $title = '' ) {
     if ( ! $month_avgs ) { // If no averages supplied, get averages for all Pubs.
         $pubs_avgs  = get_transient( 'netrics_psi' );
         $month_avgs = end( $pubs_avgs );
@@ -29,7 +29,7 @@ function netrics_print_pubs_avgs_table( $month_avgs = array() ) {
     $metrics = netrics_get_pagespeed_metrics();
     ?>
     <table class="tabular">
-        <caption>Average PSI results for <output><?php echo $month_avgs['total']; ?></output> U.S. daily newspapers (<output><?php echo $month_avgs['results']; ?></output> articles: <?php echo $month ?>)</caption>
+        <caption><?php echo $title; ?>U.S. daily newspapers: average PSI results (<output><?php echo $month_avgs['results']; ?></output> articles from <output><?php echo $month_avgs['total']; ?></output> papers in <?php echo $month ?>)</caption>
         <?php echo netrics_pubs_avgs_table_head(); ?>
         <tbody>
             <tr>
@@ -394,6 +394,42 @@ function netrics_pagespeed_corr( $array ) {
 /* ------------------------------------------------------------------------ *
  * PageSpeed Insights results
  * ------------------------------------------------------------------------ */
+
+/**
+ * Clear taxonomy terms from posts.
+ *
+ * Default terms for monthly feed and PSI:
+ * 6177 'Articles',
+ * 6178 '1PageSpeed'.
+ *
+ * @param
+ * @return
+ */
+function netrics_clear_post_terms( $tax = 'flag', $term_ids = array( 6177, 6178 ) ) {
+    $args = array(
+        'post_type'      => 'publication',
+        'orderby'        => 'title',
+        'order'          => 'ASC',
+        'posts_per_page' => 2000,
+        'offset'         => 0,
+        'fields'         => 'ids',
+        'tax_query' => array(
+            array(
+                'taxonomy' => $tax,
+                'field'    => 'term_id',
+                'terms'    => $term_ids,
+            ),
+        ),
+    );
+    $query_ids = new WP_Query( $args );
+
+    foreach ( $query_ids as $post_id ) {
+        // wp_remove_object_terms( $post_id, $term_ids, $tax ); // Monthly flags: feed and PSI.
+    }
+
+    return $query_ids;
+}
+
 /**
  * Add Pub's current-month articles/PSI-results to PSI history.
  *
@@ -403,7 +439,7 @@ function netrics_pagespeed_corr( $array ) {
  * @return
  */
 function netrics_add_month_psi() {
-    $flag = 6295;
+    $month_done = 6179; // '1PageSpeed';
     $month = date( 'Y-m' );
 
     $args = array(
@@ -418,7 +454,7 @@ function netrics_add_month_psi() {
             array(
                 'taxonomy' => 'flag',
                 'field'    => 'term_id',
-                'terms'    => $flag,
+                'terms'    => $month_done,
             ),
         ),
     );
@@ -449,7 +485,7 @@ function netrics_add_month_psi() {
  * @return
  */
  function netrics_add_month_psi_avgs() {
-    $flag = 6295;
+    $month_done = 6179; // '1PageSpeed';
     $month = date( 'Y-m' );
 
     $args = array(
@@ -464,7 +500,7 @@ function netrics_add_month_psi() {
             array(
                 'taxonomy' => 'flag',
                 'field'    => 'term_id',
-                'terms'    => $flag,
+                'terms'    => $month_done,
             ),
         ),
     );
@@ -614,7 +650,7 @@ function netrics_pagespeed_avgs( $post_id, $date = null ) {
 
     $pubs_psi = $site_psi = array();
 
-    // Array of each pub's current PSI averages.
+    // Array of each Pub's current PSI averages.
     foreach ( $query->posts as $post ) {
         // Get all months of Pub's PSI averages.
         $psi_avgs = get_post_meta( $post->ID, 'nn_psi_avgs', true);
@@ -626,10 +662,10 @@ function netrics_pagespeed_avgs( $post_id, $date = null ) {
         }
     }
 
-    // Array of current PSI averages for each Pub.
+    // Store array of current each-Pub PSI averages.
     set_transient( 'netrics_psi_avgs', $pubs_psi, 70 * DAY_IN_SECONDS );
 
-    // Averages of averages for all Pubs.
+    // Compile averages of averages for all Pubs.
     $all_scores = wp_list_pluck( $pubs_psi, 'score' );
     $all_speeds = wp_list_pluck( $pubs_psi, 'speed' );
     $all_ttis   = wp_list_pluck( $pubs_psi, 'tti' );
@@ -637,7 +673,7 @@ function netrics_pagespeed_avgs( $post_id, $date = null ) {
     $all_reqs   = wp_list_pluck( $pubs_psi, 'requests' );
     $all_doms   = wp_list_pluck( $pubs_psi, 'dom' );
 
-    // Save averaged averages as array in a transient.
+    // Save averaged averages as array (to be stored in a transient).
     $site_psi[$month]['date']     = $month;
     // Number of articles (array_sum) and papers (count) with results.
     $site_psi[$month]['results']  = array_sum( wp_list_pluck( $pubs_psi, 'results' ) );
@@ -660,9 +696,10 @@ function netrics_pagespeed_avgs( $post_id, $date = null ) {
     // Get monthly history of combined averages for all Pubs.
     $netrics_psi = get_transient( 'netrics_psi' );
 
+    // Add month's all-Pubs averages at array (in transient).
     $netrics_psi[ $month ] = $site_psi[ $month ];
 
-    // Set monthly history adding current month's combined averages.
+    // Store monthly history adding current month's combined averages.
     set_transient( 'netrics_psi', $netrics_psi, 70 * DAY_IN_SECONDS );
 
     // Log results.
@@ -672,12 +709,15 @@ function netrics_pagespeed_avgs( $post_id, $date = null ) {
 
 /**
  * Get PageSpeed averages for all articles of a Publication with results.
+ * No longer used.
  *
  * @param  int    $post_id   ID of a post.
  * @param  string $meta_key  Post meta key with PSI results.
  * @return array  $pub_ps    Array of PageSpeed averages.
  */
 function netrics_site_pagespeed( $post_id, $meta_key = 'nn_articles_201908' ) {
+    // $items_all = get_post_meta( $post_id, 'nn_articles', true);
+    // $items     = end( $items_all );
     $items   = get_post_meta( $post_id, $meta_key, true);
     $site_ps = array();
 
@@ -717,29 +757,27 @@ function netrics_site_pagespeed( $post_id, $meta_key = 'nn_articles_201908' ) {
 function netrics_pagespeed_results_list( $query, $items ) {
     $list = '';
     foreach ( $items as $item ) {
-
         $list .= ( isset( $item['url'] ) ) ? "<li><a href=\"{$item['url']}\">{$item['url']}</a>" : '<li>';
-        if ( isset( $item['pagespeed']['error'] ) ) {
 
+        if ( isset( $item['pagespeed']['error'] ) ) {
             $pgspeed = $item['pagespeed'];
             $list .=  '<br><small>';
 
             if ( ! $pgspeed['error'] ) {
-
+                $list .=  $pgspeed['date'] . ' | ';
                 $list .=  'Score: ' . $pgspeed['score'] * 100;
                 $list .=  ' | Speed/TTI(s): ' . round( $pgspeed['speed'] / 1000, 1 ) . '/' . round( $pgspeed['tti']  / 1000, 1 );
                 $list .=  ' | Size: ' . size_format( $pgspeed['size'], 1 );
                 $list .=  ' | DOM: ' . number_format( $pgspeed['dom'] );
                 $list .=  ' | Requests: ' . number_format( $pgspeed['requests'] );
-
             } else {
                 $list .= 'Error: ' . $pgspeed['error'];
             }
+
             $list .=  '</small>';
-
         }
-        $list .=  "</li>";
 
+        $list .=  "</li>";
     }
 
     return $list;
@@ -749,7 +787,7 @@ function netrics_pagespeed_results_list( $query, $items ) {
 /**
  * Format PageSpeed data numbers for front-end display.
  *
- * $data = netrics_site_pagespeed( $post_id );
+ * $data = netriics_pub_pagespeed( $post_id );
  * foreach ( $data as $k => $v ) {
  *     echo $k . ': ' . netrics_pagespeed_format( $k, $v ). "\n";
  * }
@@ -938,7 +976,6 @@ function netrics_get_pagespeed_metrics() {
 /**
  * Get data about Publications.
  *
- *
  * @since   0.1.0
  *
  * @param  query  $post_id  WP Query object.
@@ -957,7 +994,7 @@ function netrics_get_pubs_query_data( $query = array(), $circ = 1, $rank = 1 ) {
 
     foreach ( $query->posts as $post ) {
         $post_id   = $post->ID;
-        $pub_data = netrics_site_pagespeed( $post_id ); // PSI averages.
+        $pub_data = netrics_pub_pagespeed( $post_id ); // PSI averages.
 
         if ( $circ ) {
             $pubs_data['circ'][] = get_post_meta( $post_id, 'nn_circ', true );
@@ -979,6 +1016,19 @@ function netrics_get_pubs_query_data( $query = array(), $circ = 1, $rank = 1 ) {
     }
 
     return $pubs_data;
+}
+
+/**
+ * Get PageSpeed averages for all articles of a Publication with results.
+ *
+ * @param  int    $post_id   ID of a post.
+ * @return array  $pub_ps    Array of PageSpeed averages.
+ */
+function netrics_pub_pagespeed( $post_id ) {
+    $pub_psi_all   = get_post_meta( $post_id, 'nn_psi_avgs', true );
+    $pub_psi_month = end( $pub_psi_all );
+
+    return $pub_psi_month;
 }
 
 /*******************************

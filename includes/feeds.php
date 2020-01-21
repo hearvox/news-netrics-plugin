@@ -12,7 +12,7 @@
  * Articles (get articles links and titles from Publication feeds)
  * ------------------------------------------------------------------------ */
 /**
- * Delete month's temp post meta (articles) and flag.
+ * Delete month's temp post meta (articles) and flags.
  *
  * @since   0.1.1
  *
@@ -27,8 +27,8 @@ function netrics_clear_month_data( $query_ids = null ) {
     $log = '';
     foreach ( $query_ids->posts as $post_id ) {
         $del_articles = delete_post_meta( $post_id, 'nn_articles_new' );
-        // $del_errors   = delete_post_meta( $post_id, 'nn_error' );
-        // $del_flag     = wp_remove_object_terms( $post_id, 6294, 'flag' );
+        $del_errors   = delete_post_meta( $post_id, 'nn_error' );
+        $del_flag     = wp_remove_object_terms( $post_id, array( 6178, 6179 ), 'flag' ); //'0Feed' and '1PageSpeed'.
 
         $log .= "$post_id $del_articles/$del_errors/$del_flag";
     }
@@ -54,6 +54,8 @@ function netrics_get_feeds( $query_ids ) {
         $url = get_post_meta( $post_id, 'nn_pub_rss', true ); // RSS file
         // $gnews = 'https://news.google.com/rss/search?hl=en-US&gl=US&ceid=US=en&num=5&q=site=';
         // $url = $gnews . get_the_title( $post_id );
+
+        echo "$post_id $url\n";
 
         if ( ! $url ) {
             netrics_error( $post_id, 'nn_get_feeds>url' );
@@ -156,10 +158,10 @@ function netrics_get_feed_items( $xml, $url ) {
  * @param int $post_id Post ID.
  * @return array
  */
-function netrics_save_feed_items( $post_id, $items, $meta_key = 'nn_articles_new', $term_id = 6294  ) {
+function netrics_save_feed_items( $post_id, $items, $meta_key = 'nn_articles_new', $term_id = 6178 ) {
     if ( $items && isset( $items[0]['url'] ) ) { // Add post_meta and set term.
         update_post_meta( $post_id, $meta_key, $items );
-        $terms = wp_set_post_terms( $post_id, $term_id, 'flag', true ); // Term: '201908'.
+        $terms = wp_set_post_terms( $post_id, $term_id, 'flag', true ); // Term: 'Articles'.
     } else {
         return false;
     }

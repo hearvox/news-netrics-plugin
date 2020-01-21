@@ -3,18 +3,20 @@
 Run code via WP-CLI
 */
 
+// netrics_add_month_psi();
+// netrics_add_month_psi_avgs();
 netrics_add_month_psi_avgs_all();
 
 /*
 
 // Flags (taxonomy)
-$month_feed = 6290; // '201909';
-$month_done  = 6291; // '1909done';
+$month_feed = 6178; // '0Feed';
+$month_done  = 6179; // ' 1PageSpeed';
 ////////////////////////////////////////////
 // Monthly: Get latest articles from feeds:
-// 1. Delete month's data ('nn_articles_new' post meta; 'articles' and 'psi' flags)
-// 2. Get articles from JSON feeds (set 'articles' flag).
-// 3. Get articles from  XML feeds (set 'articles' flag).
+// 1. Delete month's data ('nn_articles_new' post meta; '0Feed' and '1PageSpeed' flags)
+// 2. Get articles from JSON feeds (set '0Feed' flag).
+// 3. Get articles from  XML feeds (set '0Feed' flag).
 
 netrics_clear_month_data();
 
@@ -33,7 +35,9 @@ foreach ( $json as $post_id ) {
 
 /////////////////////
 // Get articles from RSS posts.
-$month_feed = XXXX; // '2019XX'.
+
+$month_feed = 6178; // '0Feed';
+$month_done  = 6179; // '1PageSpeed';
 $flags = array( $month_feed, 6201, 6175 ); // Month with 'manual', 'none'.
 $flags = array( $month_feed, 6175 ); // Month with 'none', 'json'.
 
@@ -65,9 +69,9 @@ print_r( $done );
 
 ////////////////////////////////////////////
 // Monthly: Run PSI test for articles.
-$flags      = array( 6286, 6175, 6172 ), // '1908done' = 6286, 'none', 'json'
-$month_feed = XXXX; // '2019XX'.
-$month_done = XXXX; // '19XXdone'.
+
+$month_feed = 6178; // '0Feed';
+$month_done = 6179; // '1PageSpeed';
 
 $args = array(
     'post_type'      => 'publication',
@@ -96,6 +100,7 @@ print_r( $query_ids->posts );
 $done = netrics_api_call_pagespeed( $query_ids );
 print_r( $done );
 
+
 // Misc.
 $query_ids = netrics_get_pubs_ids();
 foreach( $query_ids->posts as $post_id ) {
@@ -104,10 +109,20 @@ foreach( $query_ids->posts as $post_id ) {
 // 'post__in'       => array( 4209, 4273, 4795, 5076 ),
 
 // results.php
+////////////////////////////////////////////
+// Monthly: Get latest articles from feeds:
+// 1. Add current-month articles/PSI  to PSI history (post meta: 'nn_articles_new' to 'nn_articles').
+// 2. Calculate PSI averages (avg. 'nn_articles_new' to post meta: 'nn_psi_avgs', 'nn_psi_score').
+// 3. Calculate all Pubs' PSI averages (set transients: 'netrics_psi', 'netrics_psi_avgs'.)
+
 netrics_add_month_psi();
 netrics_add_month_psi_avgs();
 netrics_add_month_psi_avgs_all();
+
+// $netrics_psi = get_transient( 'netrics_psi' ); // History of site-wide PSI averages.
+
+////////////////////////////////////////////
+// Change dates:
+// page-results.php (2)
 */
-
-
 
